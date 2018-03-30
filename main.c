@@ -105,9 +105,9 @@ int main(int argc, char** argv)
 				cnt = 0;
 
 				lv_mem_monitor(&stMemMonitor);
-				sprintf(c8Buf, "Total: %d, free: %d, using: %d%%",
-					stMemMonitor.total_size, stMemMonitor.free_size,
-					stMemMonitor.used_pct);
+				sprintf(c8Buf, "Total: %d, free: %d%%, using: %d",
+					stMemMonitor.total_size, stMemMonitor.free_size * 100 / stMemMonitor.total_size,
+					stMemMonitor.total_size - stMemMonitor.free_size);
 				lv_label_set_text(label1, c8Buf);
 			
 			}

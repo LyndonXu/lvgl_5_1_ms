@@ -37,8 +37,11 @@ typedef struct _tagStVolumeCtrlGroup
 	lv_obj_t *pCtrlMode;
 	lv_obj_t *pUniformVolume;
 	uint16_t u16XPos;
-	uint8_t u8MaxCtrlMode;
+
 	uint8_t u8Index;
+	uint8_t u8MaxCtrlMode;
+	const uint8_t *pCtrlModeIndex;
+	const char *pTitle;
 	bool boIsFixUniformVoume;
 
 }StVolumeCtrlGroup;
@@ -46,9 +49,9 @@ typedef struct _tagStVolumeCtrlGroup
 const char *c_pCtrlMode[_Audio_Ctrl_Mode_Reserved] =
 {
 	"Normal",
-	"Mute",
 	"L Mute",
 	"R Mute",
+	"Mute",
 	"R Use L",
 	"L Use R",
 	"Mux",
@@ -57,7 +60,7 @@ const char *c_pCtrlMode[_Audio_Ctrl_Mode_Reserved] =
 static lv_theme_t *s_pTheme = NULL;
 
 lv_signal_func_t s_pOrgSliderFun = NULL;
-lv_res_t lv_signal_func_test(struct _lv_obj_t * obj,
+lv_res_t SignalSlider(struct _lv_obj_t * obj,
 		lv_signal_t sign, void * param)
 {
 	if (s_pOrgSliderFun != NULL)
@@ -96,14 +99,43 @@ lv_res_t lv_signal_func_test(struct _lv_obj_t * obj,
 	return LV_RES_OK;
 }
 
-int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
+lv_res_t ActionUniformCB(struct _lv_obj_t * obj)
+{
+	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
+	(void)pGroup;
+
+	printf("the %dth check box is: %s\n", pGroup->u8Index, 
+		lv_cb_is_checked(obj) ? "check" : "uncheck");
+	return LV_RES_OK;
+}
+
+lv_res_t ActionCtrlModeDDlist(struct _lv_obj_t * obj)
+{
+	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
+	(void)pGroup;
+
+	printf("the %dth ddlist number is: %s\n", pGroup->u8Index,
+		c_pCtrlMode[pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]]);
+	return LV_RES_OK;
+
+}
+
+
+
+int32_t CreateVolumeCtrlGroup(
 		lv_obj_t *pParent,
 		lv_obj_t *pGlobalGroup,
-		uint16_t u16XPos, uint8_t u8MaxCtrlMode,
+		uint16_t u16XPos, 
+
+		StVolumeCtrlGroup *pGroup,
+		uint8_t u8Index,
+		const uint8_t *pCtrlModeIndex,
+		uint8_t u8MaxCtrlMode,
+		const char *pTitle,
 		bool boIsFixUniformVoume)
 {
 	lv_obj_t *pObjTmp;
-	if ((pGroup == NULL) || (pParent == NULL))
+	if ((pGroup == NULL) || (pParent == NULL) || (pCtrlModeIndex == NULL))
 	{
 		return -1;
 	}
@@ -119,10 +151,12 @@ int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
 	{
 		u8MaxCtrlMode = (uint8_t)_Audio_Ctrl_Mode_Reserved;
 	}
-
-	pGroup->u8MaxCtrlMode = u8MaxCtrlMode;
 	pGroup->u16XPos = u16XPos;
 
+	pGroup->u8Index = u8Index;
+	pGroup->u8MaxCtrlMode = u8MaxCtrlMode;
+	pGroup->pCtrlModeIndex = pCtrlModeIndex;
+	pGroup->pTitle = pTitle;
 
 	{/* control mode object */
 		char c8Str[96];
@@ -134,10 +168,9 @@ int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
 			{
 				strcat(c8Str, "\n");
 			}
-			strcat(c8Str, c_pCtrlMode[i]);
+			strcat(c8Str, c_pCtrlMode[pGroup->pCtrlModeIndex[i]]);
 		}
 
-		//pObjTmp = lv_btn_create(pParent, NULL);
 		pObjTmp = lv_ddlist_create(pParent, NULL);
 
 		if (pObjTmp == NULL)
@@ -223,6 +256,28 @@ int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
 		pGroup->boIsFixUniformVoume = boIsFixUniformVoume;
 	}
 
+	{
+		lv_obj_t *pObjTmp = lv_label_create(pParent, NULL);
+		if (pObjTmp == NULL)
+		{
+			goto err;
+		}
+
+		lv_label_set_align(pObjTmp, LV_LABEL_ALIGN_CENTER);
+
+		if (pTitle == NULL)
+		{
+			char c8Str[32];
+			sprintf(c8Str, "%d", u8Index);
+			lv_label_set_text(pObjTmp, CHS_TO_UN(c8Str));
+		}
+		else
+		{
+			lv_label_set_text(pObjTmp, CHS_TO_UN(pTitle));
+		}
+		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_MID, 0, -260);
+	}
+#endif
 
 	lv_obj_set_top(pGroup->pCtrlMode, true);
 
@@ -230,8 +285,12 @@ int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
 	{
 		s_pOrgSliderFun = lv_obj_get_signal_func(pGroup->pLeftVolume);
 	}
-	lv_obj_set_signal_func(pGroup->pLeftVolume, lv_signal_func_test);
-	lv_obj_set_signal_func(pGroup->pRightVolume, lv_signal_func_test);
+	lv_obj_set_signal_func(pGroup->pLeftVolume, SignalSlider);
+	lv_obj_set_signal_func(pGroup->pRightVolume, SignalSlider);
+
+	lv_cb_set_action(pGroup->pUniformVolume, ActionUniformCB);
+
+	lv_ddlist_set_action(pGroup->pCtrlMode, ActionCtrlModeDDlist);
 
 	{
 		uint32_t i;
@@ -243,29 +302,6 @@ int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
 
 	}
 
-	pGroup->u8Index = u8Index;
-
-	{
-		lv_obj_t *pObjTmp = lv_label_create(pParent, NULL);
-		char c8Str[32];
-		if (pObjTmp == NULL)
-		{
-			goto err;
-		}
-
-		lv_label_set_align(pObjTmp, LV_LABEL_ALIGN_CENTER);
-
-#if 1
-		sprintf(c8Str, "输入%d", u8Index);
-
-		lv_label_set_text(pObjTmp, CHS_TO_UN(c8Str));
-#else
-		sprintf(c8Str, "Input%d", u8Index);
-		lv_label_set_text(pObjTmp, c8Str);
-#endif
-		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_MID, 0, -260);
-	}
-#endif
 	return 0;
 
 	err:
@@ -273,15 +309,37 @@ int32_t CreateVolumeCtrlGroup(StVolumeCtrlGroup *pGroup, uint8_t u8Index,
 	return -1;
 }
 
-StVolumeCtrlGroup stVolumeInput1 = {0};
-StVolumeCtrlGroup stVolumeInput2 = {0};
-StVolumeCtrlGroup stVolumeInput3 = {0};
+StVolumeCtrlGroup stVolumeInput0 = { 0 };
+StVolumeCtrlGroup stVolumeInput1 = { 0 };
+StVolumeCtrlGroup stVolumeInput2 = { 0 };
+StVolumeCtrlGroup stVolumeInput3 = { 0 };
+StVolumeCtrlGroup stVolumeInput4 = { 0 };
+StVolumeCtrlGroup stVolumeInput5 = { 0 };
+StVolumeCtrlGroup stVolumeInput6 = { 0 };
+
+
+StVolumeCtrlGroup stVolumeOutputHeaderPhone = { 0 };
+StVolumeCtrlGroup stVolumeOutput1 = { 0 };
+StVolumeCtrlGroup stVolumeOutput2 = { 0 };
 
 const char *pStr = "我";
 
+const uint8_t c_u8CtrlMode4[] =
+{
+	0, 1, 2, 3
+};
+const uint8_t c_u8CtrlMode6[] =
+{
+	0, 1, 2, 3, 4, 5
+};
+const uint8_t c_u8CtrlMode2[] =
+{
+	0, 3
+};
+
+
 int32_t CreateTableView(void)
 {
-	printf("%02hhx, %02hhx\n", (uint8_t)pStr[0], (uint8_t)pStr[1]);
 	s_pTheme = lv_theme_alien_init(200, &lv_font_chs_24);
 
 	if (s_pTheme == NULL)
@@ -303,35 +361,65 @@ int32_t CreateTableView(void)
 
 	lv_obj_t *tv = lv_tabview_create(lv_scr_act(), NULL);
 
-	//lv_obj_set_size(tv, LV_HOR_RES, LV_VER_RES);
+	lv_obj_t *pTab[8] = { NULL };
+	const char *pName[8] =
+	{
+		"输入1-2",
+		"输入3-5",
+		"PC 控制",
+		"输出",
+		"其他",
+		"系统设置",
+		"系统1置",
+		"系统2置",
+	};
+	uint8_t i;
+	for (i = 0; i < 8; i++)
+	{
+		pTab[i] = lv_tabview_add_tab(tv, CHS_TO_UN(pName[i]));
 
-	lv_obj_t *pTab1 = NULL;
-	lv_obj_t *pTab2 = NULL;
-	lv_obj_t *pTab3 = NULL;
-
-	pTab1 = lv_tabview_add_tab(tv, CHS_TO_UN("输入1-3"));
-/**/
-
-	pTab2 = lv_tabview_add_tab(tv, CHS_TO_UN("输入4-6"));
-	pTab3 = lv_tabview_add_tab(tv, CHS_TO_UN("输出"));
-
-	//lv_tabview_set_tab_act(tv, 1, false);
-    lv_page_set_scrl_fit(pTab1, false, false);
-    lv_page_set_scrl_height(pTab1, lv_obj_get_height(pTab1) - 16);
-    lv_page_set_sb_mode(pTab1, LV_SB_MODE_OFF);
-
-	//lv_page_set_scrl_layout(pTab1, LV_LAYOUT_GRID);
+	}
+	for (i = 0; i < 8; i++)
+	{
+		lv_page_set_scrl_fit(pTab[i], false, false);
+		lv_page_set_scrl_height(pTab[i], lv_obj_get_height(pTab[i]) - 16);
+		lv_page_set_sb_mode(pTab[i], LV_SB_MODE_OFF);
+	}
 
 
-	CreateVolumeCtrlGroup(&stVolumeInput1, 1, pTab1, NULL, 20,
-			_Audio_Ctrl_Mode_Reserved, true);
+	CreateVolumeCtrlGroup(pTab[0], NULL, 135, &stVolumeInput0, 0,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入1", true);
+
+	CreateVolumeCtrlGroup(pTab[0], NULL, 480, &stVolumeInput1, 1,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入2", true);
 
 
-	CreateVolumeCtrlGroup(&stVolumeInput2, 2, pTab1, NULL, 20 + 150 + 138,
-			_Audio_Ctrl_Mode_Reserved, true);
+	CreateVolumeCtrlGroup(pTab[1], NULL, 20, &stVolumeInput2, 2, 
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入3", true);
 
-	CreateVolumeCtrlGroup(&stVolumeInput3, 3, pTab1, NULL, 20 + (150 + 138) * 2,
-			_Audio_Ctrl_Mode_Reserved, true);
+	CreateVolumeCtrlGroup(pTab[1], NULL, 20 + 150 + 138, &stVolumeInput3, 3,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入4", true);
+
+	CreateVolumeCtrlGroup(pTab[1], NULL, 20 + (150 + 138) * 2, &stVolumeInput4, 4,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入5", true);
+
+
+
+	CreateVolumeCtrlGroup(pTab[2], NULL, 135, &stVolumeInput5, 5,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "总输入", true);
+
+	CreateVolumeCtrlGroup(pTab[2], NULL, 480, &stVolumeInput6, 6,
+		c_u8CtrlMode6, sizeof(c_u8CtrlMode6), "PC输入", true);
+
+
+	CreateVolumeCtrlGroup(pTab[3], NULL, 20, &stVolumeOutputHeaderPhone, 7,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "耳机", false);
+
+	CreateVolumeCtrlGroup(pTab[3], NULL, 20 + 150 + 138, &stVolumeOutput1, 8,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "扬声器", false);
+
+	CreateVolumeCtrlGroup(pTab[3], NULL, 20 + (150 + 138) * 2, &stVolumeOutput2, 9,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "输出", false);
 
 	return 0;
 }
