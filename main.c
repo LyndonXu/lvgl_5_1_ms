@@ -74,6 +74,21 @@ int main(int argc, char** argv)
 		CreateTableView();
 	}
 
+	if (0)
+	{
+		lv_theme_t *s_pTheme = lv_theme_alien_init(200, NULL);
+
+		if (s_pTheme == NULL)
+		{
+			return -1;
+		}
+
+		lv_theme_set_current(s_pTheme);
+
+		//lv_test_bar_1();
+		lv_test_cont_1();
+	}
+
 	//lv_test_ddlist_1();
 
 	//lv_test_group_1();
@@ -94,7 +109,7 @@ int main(int argc, char** argv)
 		/* Periodically call the lv_task handler.
 		 * It could be done in a timer interrupt or an OS task too.*/
 		lv_task_handler();
-
+		if (0)
 		{
 			static int cnt = 0;
 			if (cnt == 25)
@@ -110,6 +125,11 @@ int main(int argc, char** argv)
 					stMemMonitor.total_size - stMemMonitor.free_size);
 				lv_label_set_text(label1, c8Buf);
 			
+			}
+			if (cnt == 12)
+			{
+				void BarValueTest(void);
+				BarValueTest();
 			}
 			cnt++;
 		}

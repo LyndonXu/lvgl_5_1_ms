@@ -656,10 +656,20 @@ static lv_res_t lv_ddlist_release_action(lv_obj_t * ddlist)
 
         uint16_t new_opt = 0;
         const char * txt = lv_label_get_text(ext->label);
-        uint16_t i;
+		uint16_t i;
+#if 0	/* what about the utf8 word !!!!? */
         for(i = 0; i < letter_i; i++) {
             if(txt[i] == '\n') new_opt ++;
         }
+#else
+		uint32_t j = 0;
+		for (i = 0; i < letter_i; i++) {
+			uint32_t letter_uni = lv_txt_utf8_next(txt, &j);
+			if (letter_uni == '\n'){
+				new_opt++;
+			}
+		}
+#endif
 
         ext->sel_opt_id = new_opt;
 

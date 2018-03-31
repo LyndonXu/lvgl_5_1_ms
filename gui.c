@@ -30,6 +30,52 @@ typedef enum _tagEmAudioCtrlMode
 	_Audio_Ctrl_Mode_Reserved,
 }EmAudioCtrlMode;
 
+enum
+{
+	_Channel_AIN_1,
+	_Channel_AIN_2,
+	_Channel_AIN_3,
+	_Channel_AIN_4,
+	_Channel_AIN_5,
+	_Channel_AIN_Mux,
+	_Channel_PC,
+	_Channel_HeaderPhone,
+	_Channel_InnerSpeaker,
+	_Channel_NormalOut,
+
+	_Channel_Reserved,
+};
+
+#ifndef TOTAL_MODE_CTRL_IN
+#define TOTAL_MODE_CTRL_IN		7
+#endif
+
+#ifndef TOTAL_MODE_CTRL_OUT
+#define TOTAL_MODE_CTRL_OUT		3
+#endif
+
+#ifndef TOTAL_MODE_CTRL
+#define TOTAL_MODE_CTRL			_Channel_Reserved
+#endif
+
+#ifndef TOTAL_EXTERN_MODE_CTRL
+#define TOTAL_EXTERN_MODE_CTRL		7
+#endif
+
+#ifndef TOTAL_VOLUME_CHANNEL
+#define TOTAL_VOLUME_CHANNEL 			TOTAL_MODE_CTRL
+#endif
+
+
+#ifndef TOTAL_EXTERN_VOLUME_CHANNEL
+#define TOTAL_EXTERN_VOLUME_CHANNEL 			TOTAL_EXTERN_MODE_CTRL
+#endif
+
+#ifndef FANTASY_POWER_CTRL
+#define FANTASY_POWER_CTRL		2
+#endif
+
+
 typedef struct _tagStVolumeCtrlGroup
 {
 	lv_obj_t *pLeftVolume;
@@ -46,18 +92,168 @@ typedef struct _tagStVolumeCtrlGroup
 
 }StVolumeCtrlGroup;
 
+
+typedef struct _tagStVolume
+{
+	uint8_t u8Channel1;
+	uint8_t u8Channel2;
+}StVolume;
+
+typedef struct _tagStMemory
+{
+	StVolume stVolume[TOTAL_VOLUME_CHANNEL];
+	EmAudioCtrlMode emAudioCtrlMode[TOTAL_MODE_CTRL];
+	bool boFantasyPower[FANTASY_POWER_CTRL];
+	uint8_t u8AINChannelEnableState;
+	uint8_t u8OutputChannelEnableState;
+}StMemory;
+
+typedef struct _tagStUniformCheckState
+{
+	bool boUniformCheckState[TOTAL_VOLUME_CHANNEL];
+}StUniformCheckState;
+
+enum 
+{
+	_Tab_Input_1_2,
+	_Tab_Input_3_5,
+	_Tab_Input_PC_Ctrl,
+	_Tab_Output,
+	_Tab_Other_Ctrl,
+	_Tab_SYS_Ctrl,
+	_Tab_Volume_Show,
+	_Tab_Reserved1,
+
+
+	_Tab_Reserved,
+};
+
+
 const char *c_pCtrlMode[_Audio_Ctrl_Mode_Reserved] =
 {
-	"Normal",
-	"L Mute",
-	"R Mute",
-	"Mute",
-	"R Use L",
-	"L Use R",
-	"Mux",
+	"直连",		//"Normal",
+	"左静音",		//"L Mute",
+	"右静音",		//"R Mute",
+	"静音",		//"Mute",
+	"左→右",		//"R Use L",
+	"右←左",		//"L Use R",
+	"混合",		//"Mux",
 };/**/
 
+
+
+StVolumeCtrlGroup stVolumeInput1 = { 0 };
+StVolumeCtrlGroup stVolumeInput2 = { 0 };
+StVolumeCtrlGroup stVolumeInput3 = { 0 };
+StVolumeCtrlGroup stVolumeInput4 = { 0 };
+StVolumeCtrlGroup stVolumeInput5 = { 0 };
+StVolumeCtrlGroup stVolumeInputMux = { 0 };
+StVolumeCtrlGroup stVolumeInputPC = { 0 };
+
+
+StVolumeCtrlGroup stVolumeOutputHeaderPhone = { 0 };
+StVolumeCtrlGroup stVolumeOutputInnerSpeaker = { 0 };
+StVolumeCtrlGroup stVolumeOutput = { 0 };
+
+const StVolumeCtrlGroup *c_pValumeCtrlArr[_Channel_Reserved] =
+{
+	&stVolumeInput1,
+	&stVolumeInput2,
+	&stVolumeInput3,
+	&stVolumeInput4,
+	&stVolumeInput5,
+	&stVolumeInputMux,
+	&stVolumeInputPC,
+	&stVolumeOutputHeaderPhone,
+	&stVolumeOutputInnerSpeaker,
+	&stVolumeOutput,
+};
+
+static StMemory s_stTotalCtrlMemroy = { 0 };
+
+static StUniformCheckState s_stTotalUnifromCheckState = {false};
+
+
+const char *c_pTableName[_Tab_Reserved] =
+{
+	"输入1-2",
+	"输入3-5",
+	"PC 控制",
+	"输出",
+	"其他",
+	"系统设置",
+	"音量采集",
+	"保留",
+};
+const uint8_t c_u8CtrlMode4[] =
+{
+	0, 1, 2, 3
+};
+const uint8_t c_u8CtrlMode7[] =
+{
+	0, 1, 2, 3, 4, 5, 6
+};
+const uint8_t c_u8CtrlMode2[] =
+{
+	0, 3
+};
+
+
+int32_t GetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode *pMode)
+{
+
+	*pMode = s_stTotalCtrlMemroy.emAudioCtrlMode[u16Channel];
+	return 0;
+}
+
+int32_t SetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode emMode)
+{
+	if ((u16Channel >= TOTAL_MODE_CTRL) || (emMode >= _Audio_Ctrl_Mode_Reserved))
+	{
+		return -1;
+	}
+	s_stTotalCtrlMemroy.emAudioCtrlMode[u16Channel] = emMode;
+	return 0;
+}
+
+int32_t SetAudioVolume(uint16_t u16Channel, StVolume stVolume)
+{
+	if ((u16Channel >= TOTAL_VOLUME_CHANNEL))
+	{
+		return -1;
+	}
+
+	memcpy(s_stTotalCtrlMemroy.stVolume + u16Channel, &stVolume, sizeof(StVolume));
+	return 0;
+}
+
+int32_t GetAudioVolume(uint16_t u16Channel, StVolume *pVolume)
+{
+	if ((u16Channel >= TOTAL_VOLUME_CHANNEL) || (pVolume == NULL))
+	{
+		return -1;
+	}
+	memcpy(pVolume, s_stTotalCtrlMemroy.stVolume + u16Channel, sizeof(StVolume));
+	return 0;
+}
+
+int32_t SetUniformCheckState(uint16_t u16Channel, bool boIsCheck)
+{
+	if ((u16Channel >= TOTAL_VOLUME_CHANNEL))
+	{
+		return -1;
+	}
+
+	s_stTotalUnifromCheckState.boUniformCheckState[u16Channel] = boIsCheck;
+	return 0;
+}
+
+
+
+
+
 static lv_theme_t *s_pTheme = NULL;
+static lv_obj_t *s_pTableView = NULL;
 
 lv_signal_func_t s_pOrgSliderFun = NULL;
 lv_res_t SignalSlider(struct _lv_obj_t * obj,
@@ -92,7 +288,20 @@ lv_res_t SignalSlider(struct _lv_obj_t * obj,
 	        			lv_slider_set_value(pGroup->pLeftVolume, u16NewValue);
 	        		}
 	        	}
-
+				{
+					StVolume stVolume;
+					if (obj == pGroup->pLeftVolume)
+					{
+						stVolume.u8Channel1 = (uint8_t)u16NewValue;
+						stVolume.u8Channel2 = (uint8_t)lv_slider_get_value(pGroup->pRightVolume);
+					}
+					else
+					{
+						stVolume.u8Channel2 = (uint8_t)u16NewValue;
+						stVolume.u8Channel1 = (uint8_t)lv_slider_get_value(pGroup->pLeftVolume);
+					}
+					SetAudioVolume(pGroup->u8Index, stVolume);
+				}
 	        }
 		}
 	}
@@ -106,6 +315,9 @@ lv_res_t ActionUniformCB(struct _lv_obj_t * obj)
 
 	printf("the %dth check box is: %s\n", pGroup->u8Index, 
 		lv_cb_is_checked(obj) ? "check" : "uncheck");
+
+	SetUniformCheckState(pGroup->u8Index, lv_cb_is_checked(obj));
+
 	return LV_RES_OK;
 }
 
@@ -114,8 +326,13 @@ lv_res_t ActionCtrlModeDDlist(struct _lv_obj_t * obj)
 	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
 	(void)pGroup;
 
-	printf("the %dth ddlist number is: %s\n", pGroup->u8Index,
-		c_pCtrlMode[pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]]);
+	printf("the %dth ddlist number is: %s(%d)\n", pGroup->u8Index,
+		c_pCtrlMode[pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]],
+		lv_ddlist_get_selected(obj));
+
+	SetAudioCtrlMode(pGroup->u8Index,
+		(EmAudioCtrlMode)(pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]));
+
 	return LV_RES_OK;
 
 }
@@ -144,6 +361,26 @@ int32_t CreateVolumeCtrlGroup(
 	{
 		return -1;
 	}
+
+	if (lv_obj_get_free_ptr(pParent) == NULL)
+	{
+		pObjTmp = lv_cont_create(pParent, NULL);
+		lv_obj_set_style(pObjTmp, &lv_style_transp);
+		lv_obj_set_click(pObjTmp, false);
+		//lv_cont_set_fit(pObjTmp, false, false);
+		//lv_cont_set_layout(pObjTmp, LV_LAYOUT_OFF);
+		//lv_obj_set_pos(pObjTmp, 0, 0);
+		lv_obj_set_height(pObjTmp, lv_obj_get_height(pParent));
+		lv_obj_set_width(pObjTmp, lv_obj_get_width(pParent));
+		lv_obj_set_free_ptr(pParent, pObjTmp);
+		pParent = pObjTmp;
+	}
+	else
+	{
+		pParent = (lv_obj_t *)lv_obj_get_free_ptr(pParent);
+	}
+
+
 
 	memset(pGroup, 0, sizeof(StVolumeCtrlGroup));
 
@@ -182,7 +419,7 @@ int32_t CreateVolumeCtrlGroup(
 		lv_obj_set_pos(pObjTmp, u16XPos, 290);
 		//lv_obj_align(pObjTmp, lv_scr_act(), LV_ALIGN_IN_TOP_LEFT, u16XPos, 290);
 
-		lv_ddlist_set_options(pObjTmp, c8Str);
+		lv_ddlist_set_options(pObjTmp, CHS_TO_UN(c8Str));
 
 	    lv_ddlist_set_fix_height(pObjTmp, LV_DPI);
 	    //lv_ddlist_set_hor_fit(pObjTmp, false);
@@ -199,13 +436,13 @@ int32_t CreateVolumeCtrlGroup(
 		 * on change, some wrong happened
 		lv_label_set_body_draw(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
 				true);*/
+#endif
 
 		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
-				LV_LABEL_LONG_BREAK);
+			LV_LABEL_LONG_BREAK);
 
 		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
 				150);
-#endif
 	}
 #if 1
 	{/* left volume object */
@@ -215,7 +452,8 @@ int32_t CreateVolumeCtrlGroup(
 			goto err;
 		}
 
-		lv_obj_set_size(pObjTmp, 40, 255);
+		lv_obj_set_size(pObjTmp, 40, 256);
+		lv_slider_set_range(pObjTmp, 0, 255);
 
 		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_LEFT, 0, -20);
 
@@ -242,7 +480,7 @@ int32_t CreateVolumeCtrlGroup(
 			goto err;
 		}
 
-		lv_cb_set_text(pObjTmp, "uniform");
+		lv_cb_set_text(pObjTmp, CHS_TO_UN("统一音量")/*"uniform"*/);
 
 		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
 		pGroup->pUniformVolume = pObjTmp;
@@ -309,38 +547,233 @@ int32_t CreateVolumeCtrlGroup(
 	return -1;
 }
 
-StVolumeCtrlGroup stVolumeInput0 = { 0 };
-StVolumeCtrlGroup stVolumeInput1 = { 0 };
-StVolumeCtrlGroup stVolumeInput2 = { 0 };
-StVolumeCtrlGroup stVolumeInput3 = { 0 };
-StVolumeCtrlGroup stVolumeInput4 = { 0 };
-StVolumeCtrlGroup stVolumeInput5 = { 0 };
-StVolumeCtrlGroup stVolumeInput6 = { 0 };
 
 
-StVolumeCtrlGroup stVolumeOutputHeaderPhone = { 0 };
-StVolumeCtrlGroup stVolumeOutput1 = { 0 };
-StVolumeCtrlGroup stVolumeOutput2 = { 0 };
+typedef int32_t (*PFUN_CreateTable)(lv_obj_t *pTabPage);
+typedef int32_t(*PFUN_RebulidTableValue)(void);
 
-const char *pStr = "我";
 
-const uint8_t c_u8CtrlMode4[] =
+int32_t CreateTableInput1To2(lv_obj_t *pTabParent)
 {
-	0, 1, 2, 3
-};
-const uint8_t c_u8CtrlMode6[] =
+	CreateVolumeCtrlGroup(pTabParent, NULL, 135, &stVolumeInput1, _Channel_AIN_1,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入1", true);
+
+	CreateVolumeCtrlGroup(pTabParent, NULL, 480, &stVolumeInput2, _Channel_AIN_2,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入2", true);
+
+	return 0;
+}
+
+int32_t RebulidVolumeCtrlValue(uint16_t u16Index)
 {
-	0, 1, 2, 3, 4, 5
-};
-const uint8_t c_u8CtrlMode2[] =
+	const StVolumeCtrlGroup *pGroup = NULL;
+	if (u16Index >= _Channel_Reserved)
+	{
+		return -1;
+	}
+
+	pGroup = c_pValumeCtrlArr[u16Index];
+
+	lv_slider_set_value(pGroup->pLeftVolume, s_stTotalCtrlMemroy.stVolume[u16Index].u8Channel1);
+	lv_slider_set_value(pGroup->pRightVolume, s_stTotalCtrlMemroy.stVolume[u16Index].u8Channel2);
+	{
+		uint16_t i, u16Selected = 0;
+		for (i = 0; i < pGroup->u8MaxCtrlMode; i++)
+		{
+			if (pGroup->pCtrlModeIndex[i] == (uint8_t)s_stTotalCtrlMemroy.emAudioCtrlMode[u16Index])
+			{
+				u16Selected = i;
+				break;
+			}
+		}
+		lv_ddlist_set_selected(pGroup->pCtrlMode, u16Selected);
+	}
+	if (!pGroup->boIsFixUniformVoume)
+	{
+		lv_cb_set_checked(pGroup->pUniformVolume, 
+			s_stTotalUnifromCheckState.boUniformCheckState[u16Index]);
+	}
+	return 0;
+}
+
+int32_t RebulidTableInput1To2Vaule(void)
 {
-	0, 3
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	//if (lv_tabview_get_tab_act(s_pTableView) != _Tab_Input_1_2)
+	//{
+	//	return -1;
+	//}
+	
+	RebulidVolumeCtrlValue(_Channel_AIN_1);
+	RebulidVolumeCtrlValue(_Channel_AIN_2);
+	
+	return 0;
+}
+
+
+int32_t CreateTableInput3To5(lv_obj_t *pTabParent)
+{
+	CreateVolumeCtrlGroup(pTabParent, NULL, 20, &stVolumeInput3, _Channel_AIN_3,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入3", true);
+
+	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + 150 + 138, &stVolumeInput4, _Channel_AIN_4,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入4", true);
+
+	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + (150 + 138) * 2, &stVolumeInput5, _Channel_AIN_5,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入5", true);
+
+	return 0;
+}
+
+int32_t RebulidTableInput3To5Vaule(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	RebulidVolumeCtrlValue(_Channel_AIN_3);
+	RebulidVolumeCtrlValue(_Channel_AIN_4);
+	RebulidVolumeCtrlValue(_Channel_AIN_5);
+	return 0;
+}
+
+
+int32_t CreateTableInputPCCtrl(lv_obj_t *pTabParent)
+{
+	CreateVolumeCtrlGroup(pTabParent, NULL, 135, &stVolumeInputMux, _Channel_AIN_Mux,
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "总输入", false);
+
+	CreateVolumeCtrlGroup(pTabParent, NULL, 480, &stVolumeInputPC, _Channel_PC,
+		c_u8CtrlMode7, sizeof(c_u8CtrlMode7), "PC输入", false);
+
+	return 0;
+}
+
+int32_t RebulidTableInputPCCtrlVaule(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	RebulidVolumeCtrlValue(_Channel_AIN_Mux);
+	RebulidVolumeCtrlValue(_Channel_PC);
+	return 0;
+}
+
+int32_t CreateTableOutputCtrl(lv_obj_t *pTabParent)
+{
+	CreateVolumeCtrlGroup(pTabParent, NULL, 20, &stVolumeOutputHeaderPhone, _Channel_HeaderPhone,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "耳机", false);
+
+	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + 150 + 138, &stVolumeOutputInnerSpeaker, _Channel_InnerSpeaker,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "扬声器", false);
+
+	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + (150 + 138) * 2, &stVolumeOutput, _Channel_NormalOut,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "输出", false);
+	return 0;
+}
+
+int32_t RebulidTableOutputVaule(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	RebulidVolumeCtrlValue(_Channel_HeaderPhone);
+	RebulidVolumeCtrlValue(_Channel_InnerSpeaker);
+	RebulidVolumeCtrlValue(_Channel_NormalOut);
+	return 0;
+}
+
+
+const PFUN_CreateTable c_pFUN_CreateTable[_Tab_Reserved] = 
+{
+	CreateTableInput1To2,
+	CreateTableInput3To5,
+	CreateTableInputPCCtrl,
+	CreateTableOutputCtrl,
+	NULL,
 };
 
+const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
+{
+	RebulidTableInput1To2Vaule,
+	RebulidTableInput3To5Vaule,
+	RebulidTableInputPCCtrlVaule,
+	RebulidTableOutputVaule,
+	NULL,
+};
+
+
+
+int32_t CreateTable(lv_obj_t *pTabPage, uint16_t u16TableIndex)
+{
+	if (u16TableIndex >= _Tab_Reserved)
+	{
+		return -1;
+	}
+	if (c_pFUN_CreateTable[u16TableIndex] != NULL)
+	{
+		if (c_pFUN_CreateTable[u16TableIndex](pTabPage) == 0)
+		{
+			if (c_pFun_RebulidTableValue[u16TableIndex] != NULL)
+			{
+				c_pFun_RebulidTableValue[u16TableIndex]();
+			}
+			return 0;
+		}
+		return -1;
+	}
+	return -1;
+}
+
+
+static lv_obj_t *pBar[14];
+
+void lv_tabview_action(lv_obj_t *pTV, uint16_t u16CurTable)
+{
+	uint16_t u16OrgTable = lv_tabview_get_tab_act(pTV);
+	printf("the old page is: %d, and the new is: %d\n",
+		u16OrgTable, u16CurTable);
+
+	if (u16OrgTable != u16CurTable)
+	{
+		//if (u16OrgTable == 1)
+		{
+			lv_obj_t *pTable = lv_tabview_get_tab(pTV, u16OrgTable);
+			lv_obj_t *pCont = (lv_obj_t *)lv_obj_get_free_ptr(pTable);
+			if (pCont != NULL)
+			{
+				lv_obj_del(pCont);
+			}
+			lv_obj_set_free_ptr(pTable, NULL);
+		}
+
+		//if (u16CurTable == 1)
+		{
+			lv_obj_t *pTable = lv_tabview_get_tab(pTV, u16CurTable);
+			lv_obj_t *pCont = (lv_obj_t *)lv_obj_get_free_ptr(pTable);
+			if (pCont == NULL)
+			{
+				CreateTable(pTable, u16CurTable);
+
+			}
+		}
+	}
+}
 
 int32_t CreateTableView(void)
 {
-	s_pTheme = lv_theme_alien_init(200, &lv_font_chs_24);
+
+	//lv_font_add(&lv_font_symbol_20, &lv_font_chs_24);
+	s_pTheme = lv_theme_alien_init(120, &lv_font_chs_24);
 
 	if (s_pTheme == NULL)
 	{
@@ -361,65 +794,58 @@ int32_t CreateTableView(void)
 
 	lv_obj_t *tv = lv_tabview_create(lv_scr_act(), NULL);
 
-	lv_obj_t *pTab[8] = { NULL };
-	const char *pName[8] =
-	{
-		"输入1-2",
-		"输入3-5",
-		"PC 控制",
-		"输出",
-		"其他",
-		"系统设置",
-		"系统1置",
-		"系统2置",
-	};
-	uint8_t i;
-	for (i = 0; i < 8; i++)
-	{
-		pTab[i] = lv_tabview_add_tab(tv, CHS_TO_UN(pName[i]));
+	lv_obj_t *pTab[_Tab_Reserved] = { NULL };
 
+	uint8_t i;
+	for (i = 0; i < _Tab_Reserved; i++)
+	{
+		pTab[i] = lv_tabview_add_tab(tv, CHS_TO_UN(c_pTableName[i]));
 	}
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < _Tab_Reserved; i++)
 	{
 		lv_page_set_scrl_fit(pTab[i], false, false);
 		lv_page_set_scrl_height(pTab[i], lv_obj_get_height(pTab[i]) - 16);
 		lv_page_set_sb_mode(pTab[i], LV_SB_MODE_OFF);
 	}
 
+	CreateTable(pTab[_Tab_Input_PC_Ctrl], _Tab_Input_PC_Ctrl);
 
-	CreateVolumeCtrlGroup(pTab[0], NULL, 135, &stVolumeInput0, 0,
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入1", true);
+#if 0
+	{
+		uint32_t i;
+		for (i = 0; i < 7; i++)
+		{
+			uint32_t j;
+			for (j = 0; j < 2; j++)
+			{
+				lv_obj_t * bar2 = lv_bar_create(pTab[6], NULL);
+				lv_obj_set_size(bar2, 20, 300);
+				lv_obj_set_pos(bar2, 30 + i * 110 + j * 45, 60);
+				lv_bar_set_range(bar2, 0, 300);
+				lv_bar_set_value(bar2, i * 20 + j * 5);
 
-	CreateVolumeCtrlGroup(pTab[0], NULL, 480, &stVolumeInput1, 1,
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入2", true);
+				pBar[i * 2 + j] = bar2;
+			}
+		}
+	}
+#endif
 
+	lv_tabview_set_tab_act(tv, _Tab_Input_PC_Ctrl, false);
 
-	CreateVolumeCtrlGroup(pTab[1], NULL, 20, &stVolumeInput2, 2, 
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入3", true);
+	lv_tabview_set_tab_load_action(tv, lv_tabview_action);
 
-	CreateVolumeCtrlGroup(pTab[1], NULL, 20 + 150 + 138, &stVolumeInput3, 3,
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入4", true);
-
-	CreateVolumeCtrlGroup(pTab[1], NULL, 20 + (150 + 138) * 2, &stVolumeInput4, 4,
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入5", true);
-
-
-
-	CreateVolumeCtrlGroup(pTab[2], NULL, 135, &stVolumeInput5, 5,
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "总输入", true);
-
-	CreateVolumeCtrlGroup(pTab[2], NULL, 480, &stVolumeInput6, 6,
-		c_u8CtrlMode6, sizeof(c_u8CtrlMode6), "PC输入", true);
-
-
-	CreateVolumeCtrlGroup(pTab[3], NULL, 20, &stVolumeOutputHeaderPhone, 7,
-		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "耳机", false);
-
-	CreateVolumeCtrlGroup(pTab[3], NULL, 20 + 150 + 138, &stVolumeOutput1, 8,
-		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "扬声器", false);
-
-	CreateVolumeCtrlGroup(pTab[3], NULL, 20 + (150 + 138) * 2, &stVolumeOutput2, 9,
-		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "输出", false);
+	s_pTableView = tv;
 
 	return 0;
+}
+
+void BarValueTest(void)
+{
+#if 0
+	uint32_t i;
+	for (i = 0; i < 14; i++)
+	{
+		lv_bar_set_value(pBar[i], rand()%300);
+	}
+#endif
 }
