@@ -25,7 +25,8 @@
 #include "lv_examples/lv_tests/lv_test_theme/lv_test_theme.h"
 #include "lv_examples/lv_tests/lv_test_group/lv_test_group.h"
 #include "lv_examples/lv_tests/lv_test.h"
-/*********************
+#include "lv_examples/lv_tutorial/8_animations/lv_tutorial_animations.h"
+ /*********************
  *      DEFINES
  *********************/
 
@@ -67,14 +68,14 @@ int main(int argc, char** argv)
 	//lv_theme_t * th = lv_theme_night_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_theme_t * th = lv_theme_alien_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_test_theme_1(th);
-	if (1)
+	if (0)
 	{
 
 		int32_t CreateTableView(void);
 		CreateTableView();
 	}
 
-	if (0)
+	if (1)
 	{
 		lv_theme_t *s_pTheme = lv_theme_alien_init(200, NULL);
 
@@ -83,17 +84,18 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-		lv_theme_set_current(s_pTheme);
+		//lv_theme_set_current(s_pTheme);
 
 		//lv_test_bar_1();
-		lv_test_cont_1();
+		//lv_test_cont_1();
+		lv_tutorial_animations();
 	}
 
 	//lv_test_ddlist_1();
 
 	//lv_test_group_1();
 	//lv_test_img_1();
-
+#if 1
 	/*Create a Label on the currently active screen*/
 	lv_obj_t * label1 = lv_label_create(lv_scr_act(), NULL);
 
@@ -104,12 +106,13 @@ int main(int argc, char** argv)
 	 * NULL means align on parent (which is the screen now)
 	 * 0, 0 at the end means an x, y offset after alignment*/
 	lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
+#endif
 	while (1)
 	{
 		/* Periodically call the lv_task handler.
 		 * It could be done in a timer interrupt or an OS task too.*/
 		lv_task_handler();
-		if (0)
+#if 1
 		{
 			static int cnt = 0;
 			if (cnt == 25)
@@ -133,11 +136,16 @@ int main(int argc, char** argv)
 			}
 			cnt++;
 		}
+#endif
 #if !defined _WIN32
 		usleep(1000); /*Just to let the system breath*/
 #else
 		Sleep(1);
 #endif
+		{
+			void flash_style(void);
+			flash_style();
+		}
 	}
 
 	return 0;

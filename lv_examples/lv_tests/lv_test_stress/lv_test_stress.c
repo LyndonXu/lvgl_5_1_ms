@@ -86,7 +86,7 @@ void lv_test_stress_1(void)
     sa.repeat = 1;
     sa.repeat_pause = 500;
     sa.end_cb = NULL;
-    lv_style_anim_create(&sa);
+    lv_style_anim_create(&sa, NULL);
 }
 
 

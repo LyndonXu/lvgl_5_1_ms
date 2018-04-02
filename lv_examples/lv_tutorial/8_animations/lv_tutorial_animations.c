@@ -42,6 +42,10 @@
  *  STATIC VARIABLES
  **********************/
 lv_style_t btn3_style;
+lv_style_t text_style;
+lv_style_t text_style_transp;
+
+void *style = NULL;
 
 /**********************
  *      MACROS
@@ -51,6 +55,28 @@ lv_style_t btn3_style;
  *   GLOBAL FUNCTIONS
  **********************/
 
+void flash_style(void)
+{
+	static uint32_t time = 0;
+	if (time == 2000)
+	{
+		if (style != NULL)
+		{
+			lv_anim_reflash(style, NULL, -500, 0);
+		}
+		//time = 0;
+	}
+	time++;
+}
+
+void lv_anim_end_cb(void *des)
+{
+	printf("%s\n", __FUNCTION__);
+	lv_mem_free(des);
+	style = NULL;
+}
+
+
 /**
  * Crate some objects an animate them
  */
@@ -58,7 +84,7 @@ void lv_tutorial_animations(void)
 {
     lv_obj_t *label;
 
-
+#if 0
     /*Create a button the demonstrate built-in animations*/
     lv_obj_t *btn1;
     btn1 = lv_btn_create(lv_scr_act(), NULL);
@@ -110,19 +136,50 @@ void lv_tutorial_animations(void)
     lv_style_copy(&btn3_style, lv_btn_get_style(btn3, LV_BTN_STYLE_REL));
     lv_btn_set_style(btn3, LV_BTN_STATE_REL, &btn3_style);
 
-    /*Animate the new style*/
-    lv_style_anim_t sa;
-    sa.style_anim = &btn3_style;            /*This style will be animated*/
-    sa.style_start = &lv_style_btn_rel;     /*Style in the beginning (can be 'style_anim' as well)*/
-    sa.style_end = &lv_style_pretty;        /*Style at the and (can be 'style_anim' as well)*/
-    sa.act_time = -500;                     /*These parameters are the same as with the normal animation*/
-    sa.time = 1000;
-    sa.playback = 1;
-    sa.playback_pause = 500;
-    sa.repeat = 1;
-    sa.repeat_pause = 500;
-    sa.end_cb = NULL;
-    lv_style_anim_create(&sa);
+	{
+		/*Animate the new style*/
+		lv_style_anim_t sa;
+		sa.style_anim = &btn3_style;            /*This style will be animated*/
+		sa.style_start = &lv_style_btn_rel;     /*Style in the beginning (can be 'style_anim' as well)*/
+		sa.style_end = &lv_style_transp;        /*Style at the and (can be 'style_anim' as well)*/
+		sa.act_time = -500;                     /*These parameters are the same as with the normal animation*/
+		sa.time = 1000;
+		sa.playback = 1;
+		sa.playback_pause = 500;
+		sa.repeat = 1;
+		sa.repeat_pause = 500;
+		sa.end_cb = NULL;
+		lv_style_anim_create(&sa);
+	}
+#endif
+
+
+	label = lv_label_create(lv_scr_act(), NULL);
+	lv_label_set_text(label, "test text");
+	lv_obj_set_pos(label, 10, 230);     /*Set a position. It will be the animation's destination*/
+
+	lv_style_copy(&text_style, lv_label_get_style(label));
+	lv_style_copy(&text_style_transp, &text_style);
+	text_style_transp.text.opa = LV_OPA_TRANSP;
+	//text_style_transp.text.color.blue = 0xFF;
+	lv_label_set_style(label, &text_style);
+
+	if(1)
+	{
+		lv_style_anim_t sa;
+		sa.style_anim = &text_style;            /*This style will be animated*/
+		sa.style_start = &lv_style_scr;     /*Style in the beginning (can be 'style_anim' as well)*/
+		sa.style_end = &text_style_transp;        /*Style at the and (can be 'style_anim' as well)*/
+		sa.act_time = -500;                     /*These parameters are the same as with the normal animation*/
+		sa.time = 2000;
+		sa.playback = 0;
+		sa.playback_pause = 500;
+		sa.repeat = 0;
+		sa.repeat_pause = 500;
+		sa.end_cb = lv_anim_end_cb;
+		style = lv_style_anim_create(&sa, NULL);
+	}
+
 }
 
 /**********************
