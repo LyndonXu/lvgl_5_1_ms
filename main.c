@@ -68,14 +68,14 @@ int main(int argc, char** argv)
 	//lv_theme_t * th = lv_theme_night_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_theme_t * th = lv_theme_alien_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_test_theme_1(th);
-	if (0)
+	if (1)
 	{
 
 		int32_t CreateTableView(void);
 		CreateTableView();
 	}
 
-	if (1)
+	if (0)
 	{
 		lv_theme_t *s_pTheme = lv_theme_alien_init(200, NULL);
 
@@ -84,11 +84,12 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-		//lv_theme_set_current(s_pTheme);
+		lv_theme_set_current(s_pTheme);
 
 		//lv_test_bar_1();
 		//lv_test_cont_1();
-		lv_tutorial_animations();
+		//lv_tutorial_animations();
+		lv_test_mbox_1();
 	}
 
 	//lv_test_ddlist_1();
@@ -105,7 +106,7 @@ int main(int argc, char** argv)
 	/* Align the Label to the center
 	 * NULL means align on parent (which is the screen now)
 	 * 0, 0 at the end means an x, y offset after alignment*/
-	lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
+	lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, -50);
 #endif
 	while (1)
 	{

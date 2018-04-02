@@ -72,11 +72,15 @@ void lv_test_cont_1(void)
     cont4_style.body.padding.hor = 20;
     cont4_style.body.padding.ver = 40;
     cont4_style.body.padding.inner = 1;
+	cont4_style.body.border.width = 8;
+	//cont4_style.body.empty = 1;
 
     lv_obj_t * cont4 = lv_cont_create(lv_scr_act(), cont3);
+	lv_cont_set_layout(cont4, LV_LAYOUT_COL_L);
+
+    lv_cont_set_style(cont4, &cont4_style);
     lv_label_create(cont4, obj2_1);
     lv_label_create(cont4, obj2_2);
-    lv_cont_set_style(cont4, &cont4_style);
 
     lv_obj_align(cont4, cont3, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 10);
 

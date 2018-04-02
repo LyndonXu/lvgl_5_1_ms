@@ -39,12 +39,13 @@ static lv_res_t mbox_action(lv_obj_t *btn, const char *txt);
  */
 void lv_test_mbox_1(void)
 {
+    static const char * btns2[] = {"Ok", "Cancel", ""};
     /* Default object */
     lv_obj_t *mbox1 = lv_mbox_create(lv_scr_act(), NULL);
+    lv_mbox_add_btns(mbox1, btns2, NULL);
     lv_obj_set_pos(mbox1, 10, 10);
 
     /*Add buttons and modify text*/
-    static const char * btns2[] = {"Ok", "Cancel", ""};
     lv_obj_t *mbox2 = lv_mbox_create(lv_scr_act(), NULL);
     lv_mbox_add_btns(mbox2, btns2, NULL);
     lv_mbox_set_text(mbox2, "Message");

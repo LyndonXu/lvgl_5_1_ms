@@ -82,12 +82,17 @@ typedef struct _tagStVolumeCtrlGroup
 	lv_obj_t *pRightVolume;
 	lv_obj_t *pCtrlMode;
 	lv_obj_t *pUniformVolume;
+	lv_obj_t *pTipsLabel;
+	lv_style_t *pTipsStyle;
+	void *pTipsAnim;
 	uint16_t u16XPos;
 
 	uint8_t u8Index;
 	uint8_t u8MaxCtrlMode;
 	const uint8_t *pCtrlModeIndex;
+	
 	const char *pTitle;
+
 	bool boIsFixUniformVoume;
 
 }StVolumeCtrlGroup;
@@ -256,6 +261,21 @@ static lv_theme_t *s_pTheme = NULL;
 static lv_obj_t *s_pTableView = NULL;
 
 lv_signal_func_t s_pOrgSliderFun = NULL;
+
+void anim_tips_end_cb(void *des)
+{
+
+	StVolumeCtrlGroup *pGroup = lv_style_anim_get_free_ptr(des);
+	lv_obj_del(pGroup->pTipsLabel);
+	lv_mem_free(pGroup->pTipsStyle);
+	pGroup->pTipsLabel = NULL;
+	pGroup->pTipsStyle = NULL;
+	pGroup->pTipsAnim = NULL;
+
+	lv_mem_free(des);
+	printf("%s, group index: %d\n", __FUNCTION__, pGroup->u8Index);
+}
+
 lv_res_t SignalSlider(struct _lv_obj_t * obj,
 		lv_signal_t sign, void * param)
 {
@@ -302,6 +322,67 @@ lv_res_t SignalSlider(struct _lv_obj_t * obj,
 					}
 					SetAudioVolume(pGroup->u8Index, stVolume);
 				}
+				do 
+				{
+					if (pGroup->pTipsAnim == NULL)
+					{
+						pGroup->pTipsLabel = lv_label_create(lv_obj_get_parent(obj), NULL);
+						
+						if (pGroup->pTipsLabel == NULL)
+						{
+							break;
+						}
+						pGroup->pTipsStyle = lv_mem_alloc(sizeof(lv_style_t));
+						if (pGroup->pTipsStyle == NULL)
+						{
+							lv_obj_del(pGroup->pTipsLabel);
+							pGroup->pTipsLabel = NULL;
+							break;
+						}
+						lv_style_copy(pGroup->pTipsStyle, lv_label_get_style(pGroup->pTipsLabel));
+
+						lv_label_set_style(pGroup->pTipsLabel, pGroup->pTipsStyle);
+						lv_obj_align(pGroup->pTipsLabel, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_MID, 0, -100);
+
+						{
+							lv_style_t stStyle;
+							lv_style_anim_t stAnim;
+							
+							lv_style_copy(&stStyle, pGroup->pTipsStyle);
+							stStyle.text.opa = LV_OPA_TRANSP;
+							stAnim.style_anim = pGroup->pTipsStyle;            /*This style will be animated*/
+							stAnim.style_start = pGroup->pTipsStyle;     /*Style in the beginning (can be 'style_anim' as well)*/
+							stAnim.style_end = &stStyle;        /*Style at the and (can be 'style_anim' as well)*/
+							stAnim.act_time = -500;                     /*These parameters are the same as with the normal animation*/
+							stAnim.time = 2000;
+							stAnim.playback = 0;
+							stAnim.playback_pause = 0;
+							stAnim.repeat = 0;
+							stAnim.repeat_pause = 0;
+							stAnim.end_cb = anim_tips_end_cb;
+
+							pGroup->pTipsAnim = lv_style_anim_create(&stAnim, pGroup);
+							if (pGroup->pTipsAnim == NULL)
+							{
+								lv_obj_del(pGroup->pTipsLabel);
+								lv_mem_free(pGroup->pTipsStyle);
+								pGroup->pTipsLabel = NULL;
+								pGroup->pTipsStyle = NULL;
+								break;
+							}
+						}
+
+					}
+					
+					if (pGroup->pTipsAnim != NULL)
+					{
+						char c8Str[32];
+						sprintf(c8Str, "%dDB", u16NewValue);
+						lv_label_set_text(pGroup->pTipsLabel, c8Str);
+						lv_anim_reflash(pGroup->pTipsAnim, NULL, -500, 0);
+					}
+
+				} while (0);
 	        }
 		}
 	}
@@ -337,6 +418,28 @@ lv_res_t ActionCtrlModeDDlist(struct _lv_obj_t * obj)
 
 }
 
+int32_t ReleaseVolumeCtrlGroup(
+	StVolumeCtrlGroup *pGroup
+)
+{
+	if (pGroup == NULL)
+	{
+		return -1;
+	}
+	if (pGroup->pTipsAnim != NULL)
+	{
+		lv_anim_del(pGroup->pTipsAnim, NULL);
+
+		lv_mem_free(pGroup->pTipsAnim);
+		pGroup->pTipsAnim = NULL;
+
+		lv_mem_free(pGroup->pTipsStyle);
+		pGroup->pTipsStyle = NULL;
+
+	}
+
+	return 0;
+}
 
 
 int32_t CreateVolumeCtrlGroup(
@@ -373,6 +476,7 @@ int32_t CreateVolumeCtrlGroup(
 		lv_obj_set_height(pObjTmp, lv_obj_get_height(pParent));
 		lv_obj_set_width(pObjTmp, lv_obj_get_width(pParent));
 		lv_obj_set_free_ptr(pParent, pObjTmp);
+
 		pParent = pObjTmp;
 	}
 	else
@@ -550,9 +654,16 @@ int32_t CreateVolumeCtrlGroup(
 
 
 typedef int32_t (*PFUN_CreateTable)(lv_obj_t *pTabPage);
+typedef int32_t (*PFUN_ReleaseTable)(lv_obj_t *pTabPage);
 typedef int32_t(*PFUN_RebulidTableValue)(void);
 
+int32_t ReleaseTableInput1To2(lv_obj_t *pTabParent)
+{
+	ReleaseVolumeCtrlGroup(&stVolumeInput1);
+	ReleaseVolumeCtrlGroup(&stVolumeInput2);
 
+	return 0;
+}
 int32_t CreateTableInput1To2(lv_obj_t *pTabParent)
 {
 	CreateVolumeCtrlGroup(pTabParent, NULL, 135, &stVolumeInput1, _Channel_AIN_1,
@@ -596,6 +707,7 @@ int32_t RebulidVolumeCtrlValue(uint16_t u16Index)
 	return 0;
 }
 
+
 int32_t RebulidTableInput1To2Vaule(void)
 {
 	if (s_pTableView == NULL)
@@ -614,6 +726,15 @@ int32_t RebulidTableInput1To2Vaule(void)
 	return 0;
 }
 
+
+int32_t ReleaseTableInput3To5(lv_obj_t *pTabParent)
+{
+	ReleaseVolumeCtrlGroup(&stVolumeInput3);
+	ReleaseVolumeCtrlGroup(&stVolumeInput4);
+	ReleaseVolumeCtrlGroup(&stVolumeInput5);
+
+	return 0;
+}
 
 int32_t CreateTableInput3To5(lv_obj_t *pTabParent)
 {
@@ -642,6 +763,12 @@ int32_t RebulidTableInput3To5Vaule(void)
 	return 0;
 }
 
+int32_t ReleaseTableInputPCCtrl(lv_obj_t *pTabParent)
+{
+	ReleaseVolumeCtrlGroup(&stVolumeInputMux);
+	ReleaseVolumeCtrlGroup(&stVolumeInputPC);
+	return 0;
+}
 
 int32_t CreateTableInputPCCtrl(lv_obj_t *pTabParent)
 {
@@ -666,6 +793,14 @@ int32_t RebulidTableInputPCCtrlVaule(void)
 	return 0;
 }
 
+int32_t ReleaseTableOutputCtrl(lv_obj_t *pTabParent)
+{
+	ReleaseVolumeCtrlGroup(&stVolumeOutputHeaderPhone);
+	ReleaseVolumeCtrlGroup(&stVolumeOutputInnerSpeaker);
+	ReleaseVolumeCtrlGroup(&stVolumeOutput);
+	return 0;
+}
+
 int32_t CreateTableOutputCtrl(lv_obj_t *pTabParent)
 {
 	CreateVolumeCtrlGroup(pTabParent, NULL, 20, &stVolumeOutputHeaderPhone, _Channel_HeaderPhone,
@@ -678,6 +813,86 @@ int32_t CreateTableOutputCtrl(lv_obj_t *pTabParent)
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "Êä³ö", false);
 	return 0;
 }
+
+
+lv_res_t ActionMemoryMBoxCB(lv_obj_t *btn, const char *txt)
+{
+	lv_obj_t *pParent = lv_obj_get_parent(btn);
+
+	printf("%s %d\n", txt, (int32_t)(lv_obj_get_free_ptr(pParent)));
+
+	lv_mbox_start_auto_close(pParent, 100);
+
+	return LV_RES_INV;
+}
+
+
+lv_res_t ActionMemoryCB(lv_obj_t * obj)
+{
+	lv_obj_t *pParent = lv_obj_get_parent(obj);
+	lv_obj_t *pObjTmp = lv_mbox_create(pParent, NULL);
+	static const char *pBTNs[] = { "Load", "Save", "" };
+	lv_mbox_add_btns(pObjTmp, pBTNs, NULL);
+	lv_obj_align(pObjTmp, pParent, LV_ALIGN_IN_TOP_LEFT, 0, 0);
+	lv_mbox_set_text(pObjTmp, "message");
+	lv_mbox_set_action(pObjTmp, ActionMemoryMBoxCB);
+	lv_obj_set_free_ptr(pObjTmp, (void *)(lv_ddlist_get_selected(obj)));
+
+	/* 
+	printf("the %dth ddlist number is: %s(%d)\n", pGroup->u8Index,
+	c_pCtrlMode[pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]],
+	lv_ddlist_get_selected(obj));
+	*/
+	return LV_RES_OK;
+}
+
+int32_t CreateTableOtherCtrl(lv_obj_t *pParent)
+{
+	lv_obj_t *pObjTmp;
+	if (lv_obj_get_free_ptr(pParent) == NULL)
+	{
+		pObjTmp = lv_cont_create(pParent, NULL);
+		lv_obj_set_style(pObjTmp, &lv_style_transp);
+		lv_obj_set_click(pObjTmp, false);
+		//lv_cont_set_fit(pObjTmp, false, false);
+		//lv_cont_set_layout(pObjTmp, LV_LAYOUT_OFF);
+		//lv_obj_set_pos(pObjTmp, 0, 0);
+		lv_obj_set_height(pObjTmp, lv_obj_get_height(pParent));
+		lv_obj_set_width(pObjTmp, lv_obj_get_width(pParent));
+		lv_obj_set_free_ptr(pParent, pObjTmp);
+
+		pParent = pObjTmp;
+	}
+	else
+	{
+		pParent = (lv_obj_t *)lv_obj_get_free_ptr(pParent);
+	}
+
+	pObjTmp = lv_ddlist_create(pParent, NULL);
+	{
+		int32_t i;
+		char c8Options[128];
+		c8Options[0] = 0;
+		for (i = 0; i < 8; i++)
+		{
+			char c8Str[32];
+			sprintf(c8Str, "memory %d", i + 1);
+			if (i != 0)
+			{
+				strcat(c8Options, "\n");
+			}
+			strcat(c8Options, c8Str);
+		}
+		lv_ddlist_set_options(pObjTmp, c8Options);
+
+		//lv_ddlist_set_fix_height(pObjTmp, LV_DPI);
+
+		lv_ddlist_set_action(pObjTmp, ActionMemoryCB);
+	}
+
+	return 0;
+}
+
 
 int32_t RebulidTableOutputVaule(void)
 {
@@ -693,12 +908,22 @@ int32_t RebulidTableOutputVaule(void)
 }
 
 
-const PFUN_CreateTable c_pFUN_CreateTable[_Tab_Reserved] = 
+const PFUN_ReleaseTable c_pFUN_ReleaseTable[_Tab_Reserved] = 
+{
+	ReleaseTableInput1To2,
+	ReleaseTableInput3To5,
+	ReleaseTableInputPCCtrl,
+	ReleaseTableOutputCtrl,
+	NULL,
+};
+
+const PFUN_CreateTable c_pFUN_CreateTable[_Tab_Reserved] =
 {
 	CreateTableInput1To2,
 	CreateTableInput3To5,
 	CreateTableInputPCCtrl,
 	CreateTableOutputCtrl,
+	CreateTableOtherCtrl,
 	NULL,
 };
 
@@ -712,6 +937,18 @@ const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
 };
 
 
+int32_t ReleaseTable(lv_obj_t *pTabPage, uint16_t u16TableIndex)
+{
+	if (u16TableIndex >= _Tab_Reserved)
+	{
+		return -1;
+	}
+	if (c_pFUN_ReleaseTable[u16TableIndex] != NULL)
+	{
+		return c_pFUN_ReleaseTable[u16TableIndex](pTabPage);
+	}
+	return -1;
+}
 
 int32_t CreateTable(lv_obj_t *pTabPage, uint16_t u16TableIndex)
 {
@@ -751,6 +988,8 @@ void lv_tabview_action(lv_obj_t *pTV, uint16_t u16CurTable)
 			lv_obj_t *pCont = (lv_obj_t *)lv_obj_get_free_ptr(pTable);
 			if (pCont != NULL)
 			{
+				ReleaseTable(pTable, u16OrgTable);
+
 				lv_obj_del(pCont);
 			}
 			lv_obj_set_free_ptr(pTable, NULL);
@@ -763,7 +1002,6 @@ void lv_tabview_action(lv_obj_t *pTV, uint16_t u16CurTable)
 			if (pCont == NULL)
 			{
 				CreateTable(pTable, u16CurTable);
-
 			}
 		}
 	}
