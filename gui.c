@@ -11,6 +11,10 @@
 
 #include "lvgl/lvgl.h"
 
+#ifndef _WIN32
+#define printf(x, ...)
+#endif
+
 extern lv_font_t lv_font_chs_20;
 extern lv_font_t lv_font_chs_24;
 

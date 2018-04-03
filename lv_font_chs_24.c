@@ -4257,7 +4257,7 @@ char *GetFakeUnicodeForCH(const char *pStr, int32_t s32StrLen)
 		while (pTmp < pEnd)
 		{
 			uint16_t u16Letter;
-			if (pTmp[0] > 0)
+			if ((int8_t)pTmp[0] > 0)
 			{
 				u16Letter = pTmp[0];
 				pTmp++;
