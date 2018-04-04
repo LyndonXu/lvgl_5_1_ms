@@ -128,6 +128,7 @@ int main(int argc, char** argv)
 					stMemMonitor.total_size, stMemMonitor.free_size * 100 / stMemMonitor.total_size,
 					stMemMonitor.total_size - stMemMonitor.free_size);
 				lv_label_set_text(label1, c8Buf);
+				lv_obj_set_top(label1, true);
 			
 			}
 			if (cnt == 12)
@@ -144,8 +145,8 @@ int main(int argc, char** argv)
 		Sleep(1);
 #endif
 		{
-			void flash_style(void);
-			flash_style();
+			void flush_style(void);
+			flush_style();
 		}
 	}
 

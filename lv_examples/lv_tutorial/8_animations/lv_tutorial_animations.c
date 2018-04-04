@@ -55,14 +55,14 @@ void *style = NULL;
  *   GLOBAL FUNCTIONS
  **********************/
 
-void flash_style(void)
+void flush_style(void)
 {
 	static uint32_t time = 0;
 	if (time == 2000)
 	{
 		if (style != NULL)
 		{
-			lv_anim_reflash(style, NULL, -500, 0);
+			lv_anim_reflush(style, NULL, -500, 0);
 		}
 		//time = 0;
 	}

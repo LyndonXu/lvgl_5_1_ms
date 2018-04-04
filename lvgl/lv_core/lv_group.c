@@ -234,6 +234,8 @@ void lv_group_send_data(lv_group_t * group, uint32_t c)
     lv_obj_t * act = lv_group_get_focused(group);
     if(act == NULL) return;
 
+	if (!lv_obj_get_click(act)) return;
+
     act->signal_func(act, LV_SIGNAL_CONTROLL, &c);
 }
 

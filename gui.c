@@ -267,7 +267,6 @@ static lv_theme_t *s_pTheme = NULL;
 static lv_obj_t *s_pTableView = NULL;
 static lv_group_t *s_pGroup = NULL;
 
-lv_signal_func_t s_pOrgSliderFun = NULL;
 
 void anim_tips_end_cb(void *des)
 {
@@ -283,118 +282,102 @@ void anim_tips_end_cb(void *des)
 	printf("%s, group index: %d\n", __FUNCTION__, pGroup->u8Index);
 }
 
-lv_res_t SignalSlider(struct _lv_obj_t * obj,
-		lv_signal_t sign, void * param)
+lv_res_t ActionSliderCB(struct _lv_obj_t * obj)
 {
-	if (s_pOrgSliderFun != NULL)
+	uint16_t u16NewValue = lv_slider_get_value(obj);
+
+	printf("slider value is: %d\n", u16NewValue);
+	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
+	if (pGroup->boIsFixUniformVoume || lv_cb_is_checked(pGroup->pUniformVolume))
 	{
-		uint16_t u16OldValue = lv_slider_get_value(obj);
-		uint16_t u16NewValue;
-		lv_res_t res = s_pOrgSliderFun (obj, sign, param);
-		if (res != LV_RES_OK)
+		if (obj == pGroup->pLeftVolume)
 		{
-			return res;
+			lv_slider_set_value(pGroup->pRightVolume, u16NewValue);
 		}
-
-		if(sign == LV_SIGNAL_PRESSING || sign == LV_SIGNAL_RELEASED
-				||sign == LV_SIGNAL_PRESS_LOST)
+		else
 		{
-	        u16NewValue = lv_slider_get_value(obj);
-	        if (u16NewValue != u16OldValue)
-	        {
-				printf("slider signal(%d) value is: %d\n", sign, lv_slider_get_value(obj));
-	        	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
-	        	if (pGroup->boIsFixUniformVoume|| lv_cb_is_checked(pGroup->pUniformVolume))
-	        	{
-	        		if (obj == pGroup->pLeftVolume)
-	        		{
-	        			lv_slider_set_value(pGroup->pRightVolume, u16NewValue);
-	        		}
-	        		else
-	        		{
-	        			lv_slider_set_value(pGroup->pLeftVolume, u16NewValue);
-	        		}
-	        	}
-				{
-					StVolume stVolume;
-					if (obj == pGroup->pLeftVolume)
-					{
-						stVolume.u8Channel1 = (uint8_t)u16NewValue;
-						stVolume.u8Channel2 = (uint8_t)lv_slider_get_value(pGroup->pRightVolume);
-					}
-					else
-					{
-						stVolume.u8Channel2 = (uint8_t)u16NewValue;
-						stVolume.u8Channel1 = (uint8_t)lv_slider_get_value(pGroup->pLeftVolume);
-					}
-					SetAudioVolume(pGroup->u8Index, stVolume);
-				}
-				do 
-				{
-					if (pGroup->pTipsAnim == NULL)
-					{
-						pGroup->pTipsLabel = lv_label_create(lv_obj_get_parent(obj), NULL);
-						
-						if (pGroup->pTipsLabel == NULL)
-						{
-							break;
-						}
-						pGroup->pTipsStyle = lv_mem_alloc(sizeof(lv_style_t));
-						if (pGroup->pTipsStyle == NULL)
-						{
-							lv_obj_del(pGroup->pTipsLabel);
-							pGroup->pTipsLabel = NULL;
-							break;
-						}
-						lv_style_copy(pGroup->pTipsStyle, lv_label_get_style(pGroup->pTipsLabel));
-
-						lv_label_set_style(pGroup->pTipsLabel, pGroup->pTipsStyle);
-						lv_obj_align(pGroup->pTipsLabel, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_MID, 0, -100);
-
-						{
-							lv_style_t stStyle;
-							lv_style_anim_t stAnim;
-							
-							lv_style_copy(&stStyle, pGroup->pTipsStyle);
-							stStyle.text.opa = LV_OPA_TRANSP;
-							stAnim.style_anim = pGroup->pTipsStyle;            /*This style will be animated*/
-							stAnim.style_start = pGroup->pTipsStyle;     /*Style in the beginning (can be 'style_anim' as well)*/
-							stAnim.style_end = &stStyle;        /*Style at the and (can be 'style_anim' as well)*/
-							stAnim.act_time = -500;                     /*These parameters are the same as with the normal animation*/
-							stAnim.time = 2000;
-							stAnim.playback = 0;
-							stAnim.playback_pause = 0;
-							stAnim.repeat = 0;
-							stAnim.repeat_pause = 0;
-							stAnim.end_cb = anim_tips_end_cb;
-
-							pGroup->pTipsAnim = lv_style_anim_create(&stAnim, pGroup);
-							if (pGroup->pTipsAnim == NULL)
-							{
-								lv_obj_del(pGroup->pTipsLabel);
-								lv_mem_free(pGroup->pTipsStyle);
-								pGroup->pTipsLabel = NULL;
-								pGroup->pTipsStyle = NULL;
-								break;
-							}
-						}
-
-					}
-					
-					if (pGroup->pTipsAnim != NULL)
-					{
-						char c8Str[32];
-						sprintf(c8Str, "%dDB", u16NewValue);
-						lv_label_set_text(pGroup->pTipsLabel, c8Str);
-						lv_anim_reflash(pGroup->pTipsAnim, NULL, -500, 0);
-					}
-
-				} while (0);
-	        }
+			lv_slider_set_value(pGroup->pLeftVolume, u16NewValue);
 		}
 	}
+	{
+		StVolume stVolume;
+		if (obj == pGroup->pLeftVolume)
+		{
+			stVolume.u8Channel1 = (uint8_t)u16NewValue;
+			stVolume.u8Channel2 = (uint8_t)lv_slider_get_value(pGroup->pRightVolume);
+		}
+		else
+		{
+			stVolume.u8Channel2 = (uint8_t)u16NewValue;
+			stVolume.u8Channel1 = (uint8_t)lv_slider_get_value(pGroup->pLeftVolume);
+		}
+		SetAudioVolume(pGroup->u8Index, stVolume);
+	}
+	do
+	{
+		if (pGroup->pTipsAnim == NULL)
+		{
+			pGroup->pTipsLabel = lv_label_create(lv_obj_get_parent(obj), NULL);
+
+			if (pGroup->pTipsLabel == NULL)
+			{
+				break;
+			}
+			pGroup->pTipsStyle = lv_mem_alloc(sizeof(lv_style_t));
+			if (pGroup->pTipsStyle == NULL)
+			{
+				lv_obj_del(pGroup->pTipsLabel);
+				pGroup->pTipsLabel = NULL;
+				break;
+			}
+			lv_style_copy(pGroup->pTipsStyle, lv_label_get_style(pGroup->pTipsLabel));
+
+			lv_label_set_style(pGroup->pTipsLabel, pGroup->pTipsStyle);
+			lv_obj_align(pGroup->pTipsLabel, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_MID, 0, -100);
+
+			{
+				lv_style_t stStyle;
+				lv_style_anim_t stAnim;
+
+				lv_style_copy(&stStyle, pGroup->pTipsStyle);
+				stStyle.text.opa = LV_OPA_TRANSP;
+				stAnim.style_anim = pGroup->pTipsStyle;            /*This style will be animated*/
+				stAnim.style_start = pGroup->pTipsStyle;     /*Style in the beginning (can be 'style_anim' as well)*/
+				stAnim.style_end = &stStyle;        /*Style at the and (can be 'style_anim' as well)*/
+				stAnim.act_time = -500;                     /*These parameters are the same as with the normal animation*/
+				stAnim.time = 2000;
+				stAnim.playback = 0;
+				stAnim.playback_pause = 0;
+				stAnim.repeat = 0;
+				stAnim.repeat_pause = 0;
+				stAnim.end_cb = anim_tips_end_cb;
+
+				pGroup->pTipsAnim = lv_style_anim_create(&stAnim, pGroup);
+				if (pGroup->pTipsAnim == NULL)
+				{
+					lv_obj_del(pGroup->pTipsLabel);
+					lv_mem_free(pGroup->pTipsStyle);
+					pGroup->pTipsLabel = NULL;
+					pGroup->pTipsStyle = NULL;
+					break;
+				}
+			}
+
+		}
+
+		if (pGroup->pTipsAnim != NULL)
+		{
+			char c8Str[32];
+			sprintf(c8Str, "%dDB", u16NewValue);
+			lv_label_set_text(pGroup->pTipsLabel, c8Str);
+			lv_anim_reflush(pGroup->pTipsAnim, NULL, -500, 0);
+		}
+
+	} while (0);
+
 	return LV_RES_OK;
 }
+
 
 lv_res_t ActionUniformCB(struct _lv_obj_t * obj)
 {
@@ -461,7 +444,7 @@ int32_t ReleaseVolumeCtrlGroup(
 
 int32_t CreateVolumeCtrlGroup(
 		lv_obj_t *pParent,
-		lv_obj_t *pGlobalGroup,
+		lv_group_t *pGlobalGroup,
 		uint16_t u16XPos, 
 
 		StVolumeCtrlGroup *pGroup,
@@ -640,12 +623,8 @@ int32_t CreateVolumeCtrlGroup(
 
 	lv_obj_set_top(pGroup->pCtrlMode, true);
 
-	if (s_pOrgSliderFun == NULL)
-	{
-		s_pOrgSliderFun = lv_obj_get_signal_func(pGroup->pLeftVolume);
-	}
-	lv_obj_set_signal_func(pGroup->pLeftVolume, SignalSlider);
-	lv_obj_set_signal_func(pGroup->pRightVolume, SignalSlider);
+	lv_slider_set_action(pGroup->pLeftVolume, ActionSliderCB);
+	lv_slider_set_action(pGroup->pRightVolume, ActionSliderCB);
 
 	lv_cb_set_action(pGroup->pUniformVolume, ActionUniformCB);
 
@@ -657,8 +636,10 @@ int32_t CreateVolumeCtrlGroup(
 		for (i = 0; i < 4; i++)
 		{
 			lv_obj_set_free_ptr(p2ObjTmp[i], pGroup);
-
-			lv_group_add_obj(s_pGroup, p2ObjTmp[i]);
+			if (pGlobalGroup != NULL)
+			{
+				lv_group_add_obj(pGlobalGroup, p2ObjTmp[i]);
+			}
 		}
 
 	}
@@ -672,7 +653,7 @@ int32_t CreateVolumeCtrlGroup(
 
 
 
-typedef int32_t (*PFUN_CreateTable)(lv_obj_t *pTabPage);
+typedef int32_t (*PFUN_CreateTable)(lv_obj_t *pTabPage, lv_group_t *pGroup);
 typedef int32_t (*PFUN_ReleaseTable)(lv_obj_t *pTabPage);
 typedef int32_t(*PFUN_RebulidTableValue)(void);
 
@@ -683,12 +664,12 @@ int32_t ReleaseTableInput1To2(lv_obj_t *pTabParent)
 
 	return 0;
 }
-int32_t CreateTableInput1To2(lv_obj_t *pTabParent)
+int32_t CreateTableInput1To2(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
-	CreateVolumeCtrlGroup(pTabParent, NULL, 135, &stVolumeInput1, _Channel_AIN_1,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 135, &stVolumeInput1, _Channel_AIN_1,
 		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入1", true);
 
-	CreateVolumeCtrlGroup(pTabParent, NULL, 480, &stVolumeInput2, _Channel_AIN_2,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 480, &stVolumeInput2, _Channel_AIN_2,
 		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入2", true);
 
 	return 0;
@@ -755,15 +736,15 @@ int32_t ReleaseTableInput3To5(lv_obj_t *pTabParent)
 	return 0;
 }
 
-int32_t CreateTableInput3To5(lv_obj_t *pTabParent)
+int32_t CreateTableInput3To5(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
-	CreateVolumeCtrlGroup(pTabParent, NULL, 20, &stVolumeInput3, _Channel_AIN_3,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 20, &stVolumeInput3, _Channel_AIN_3,
 		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入3", true);
 
-	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + 150 + 138, &stVolumeInput4, _Channel_AIN_4,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 20 + 150 + 138, &stVolumeInput4, _Channel_AIN_4,
 		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入4", true);
 
-	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + (150 + 138) * 2, &stVolumeInput5, _Channel_AIN_5,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 20 + (150 + 138) * 2, &stVolumeInput5, _Channel_AIN_5,
 		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "输入5", true);
 
 	return 0;
@@ -789,12 +770,12 @@ int32_t ReleaseTableInputPCCtrl(lv_obj_t *pTabParent)
 	return 0;
 }
 
-int32_t CreateTableInputPCCtrl(lv_obj_t *pTabParent)
+int32_t CreateTableInputPCCtrl(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
-	CreateVolumeCtrlGroup(pTabParent, NULL, 135, &stVolumeInputMux, _Channel_AIN_Mux,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 135, &stVolumeInputMux, _Channel_AIN_Mux,
 		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "总输入", false);
 
-	CreateVolumeCtrlGroup(pTabParent, NULL, 480, &stVolumeInputPC, _Channel_PC,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 480, &stVolumeInputPC, _Channel_PC,
 		c_u8CtrlMode7, sizeof(c_u8CtrlMode7), "PC输入", false);
 
 	return 0;
@@ -820,15 +801,15 @@ int32_t ReleaseTableOutputCtrl(lv_obj_t *pTabParent)
 	return 0;
 }
 
-int32_t CreateTableOutputCtrl(lv_obj_t *pTabParent)
+int32_t CreateTableOutputCtrl(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
-	CreateVolumeCtrlGroup(pTabParent, NULL, 20, &stVolumeOutputHeaderPhone, _Channel_HeaderPhone,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 20, &stVolumeOutputHeaderPhone, _Channel_HeaderPhone,
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "耳机", false);
 
-	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + 150 + 138, &stVolumeOutputInnerSpeaker, _Channel_InnerSpeaker,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 20 + 150 + 138, &stVolumeOutputInnerSpeaker, _Channel_InnerSpeaker,
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "扬声器", false);
 
-	CreateVolumeCtrlGroup(pTabParent, NULL, 20 + (150 + 138) * 2, &stVolumeOutput, _Channel_NormalOut,
+	CreateVolumeCtrlGroup(pTabParent, pGroup, 20 + (150 + 138) * 2, &stVolumeOutput, _Channel_NormalOut,
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "输出", false);
 	return 0;
 }
@@ -865,7 +846,7 @@ lv_res_t ActionMemoryCB(lv_obj_t * obj)
 	return LV_RES_OK;
 }
 
-int32_t CreateTableOtherCtrl(lv_obj_t *pParent)
+int32_t CreateTableOtherCtrl(lv_obj_t *pParent, lv_group_t *pGroup)
 {
 	lv_obj_t *pObjTmp;
 	if (lv_obj_get_free_ptr(pParent) == NULL)
@@ -977,7 +958,8 @@ int32_t CreateTable(lv_obj_t *pTabPage, uint16_t u16TableIndex)
 	}
 	if (c_pFUN_CreateTable[u16TableIndex] != NULL)
 	{
-		if (c_pFUN_CreateTable[u16TableIndex](pTabPage) == 0)
+		if (c_pFUN_CreateTable[u16TableIndex](pTabPage, 
+			lv_obj_get_free_ptr(lv_obj_get_parent(lv_obj_get_parent(pTabPage)))) == 0)
 		{
 			if (c_pFun_RebulidTableValue[u16TableIndex] != NULL)
 			{
@@ -1103,17 +1085,19 @@ int32_t CreateTableView(void)
 		s_pGroup = lv_group_create();
 		lv_group_set_focus_cb(s_pGroup, group_focus_cb);
 		lv_group_set_style_mod_cb(s_pGroup, style_mod);
-
+#ifdef _WIN32
 		lv_indev_drv_t kb_drv;
 		kb_drv.type = LV_INDEV_TYPE_KEYPAD;
 		kb_drv.read = keyboard_read;
 		lv_indev_t *kb_indev = lv_indev_drv_register(&kb_drv);
 		lv_indev_set_group(kb_indev, s_pGroup);
-
+#endif
 		if (s_pGroup != NULL)
 		{
 			lv_group_add_obj(s_pGroup, tv);
 		}
+
+		lv_obj_set_free_ptr(tv, s_pGroup);
 
 	}
 

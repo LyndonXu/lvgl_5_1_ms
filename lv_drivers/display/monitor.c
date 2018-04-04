@@ -89,7 +89,6 @@ void monitor_init(void)
  */
 void monitor_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_color_t *color_p)
 {
-	static bool boIsFlush = false;
     /*Return if the area is out the screen*/
     if(x2 < 0 || y2 < 0 || x1 > MONITOR_HOR_RES - 1 || y1 > MONITOR_VER_RES - 1) {
 		lv_flush_begin();
@@ -97,6 +96,8 @@ void monitor_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_colo
         return;
     }
 
+#if LV_VDB_DOUBLE != 0
+	static bool boIsFlush = false;
 	if (boIsFlush)
 	{
 		/*IMPORTANT! It must be called to tell the system the flush is ready*/
@@ -123,6 +124,28 @@ void monitor_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_colo
 #endif
 	lv_flush_begin();
 	boIsFlush = true;
+#else
+	int32_t y;
+#if LV_COLOR_DEPTH != 24
+	int32_t x;
+	for (y = y1; y <= y2; y++) {
+		for (x = x1; x <= x2; x++) {
+			tft_fb[y * MONITOR_HOR_RES + x] = lv_color_to24(*color_p);
+			color_p++;
+		}
+
+	}
+#else
+	uint32_t w = x2 - x1 + 1;
+	for (y = y1; y <= y2; y++) {
+		memcpy(&tft_fb[y * MONITOR_HOR_RES + x1], color_p, w * sizeof(lv_color_t));
+
+		color_p += w;
+	}
+#endif
+	lv_flush_begin();
+	lv_flush_ready();
+#endif
 
     sdl_refr_qry = true;
 
