@@ -89,11 +89,19 @@ void monitor_init(void)
  */
 void monitor_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_color_t *color_p)
 {
+	static bool boIsFlush = false;
     /*Return if the area is out the screen*/
     if(x2 < 0 || y2 < 0 || x1 > MONITOR_HOR_RES - 1 || y1 > MONITOR_VER_RES - 1) {
-        lv_flush_ready();
+		lv_flush_begin();
+		lv_flush_ready();
         return;
     }
+
+	if (boIsFlush)
+	{
+		/*IMPORTANT! It must be called to tell the system the flush is ready*/
+		lv_flush_ready();
+	}
 
     int32_t y;
 #if LV_COLOR_DEPTH != 24
@@ -113,11 +121,11 @@ void monitor_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_colo
         color_p += w;
     }
 #endif
+	lv_flush_begin();
+	boIsFlush = true;
 
     sdl_refr_qry = true;
 
-    /*IMPORTANT! It must be called to tell the system the flush is ready*/
-    lv_flush_ready();
 }
 
 

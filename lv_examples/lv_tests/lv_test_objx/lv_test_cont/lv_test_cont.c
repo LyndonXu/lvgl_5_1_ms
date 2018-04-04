@@ -42,7 +42,7 @@ void lv_test_cont_1(void)
     /* Create a default object*/
     lv_obj_t * cont1 = lv_cont_create(lv_scr_act(), NULL);
     lv_obj_set_pos(cont1, 10, 10);
-    lv_cont_set_style(cont1, &lv_style_pretty);
+    //lv_cont_set_style(cont1, &lv_style_pretty);
 
     /*Test fit wit adding two labels*/
     lv_obj_t * cont2 = lv_cont_create(lv_scr_act(), cont1);

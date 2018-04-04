@@ -140,6 +140,7 @@ void demo_create(void)
     g = lv_group_create();
     lv_group_set_focus_cb(g, group_focus_cb);
 
+#if 0
     /*Create a window to hold all the objects*/
     static lv_style_t win_style;
     lv_style_copy(&win_style, &lv_style_transp);
@@ -147,13 +148,14 @@ void demo_create(void)
     win_style.body.padding.ver = LV_DPI / 4;
     win_style.body.padding.inner = LV_DPI / 4;
 
-
 /*
     win = lv_win_create(lv_scr_act(), NULL);
     lv_win_set_title(win, "Group test");
     lv_win_set_layout(win, LV_LAYOUT_PRETTY);
     lv_win_set_style(win, LV_WIN_STYLE_CONTENT_SCRL, &win_style);
 */
+#endif
+
 
 #if LV_DEMO_WALLPAPER
     lv_obj_t *wp = lv_img_create(lv_scr_act(), NULL);

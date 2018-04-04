@@ -86,6 +86,8 @@ typedef struct _tagStVolumeCtrlGroup
 	lv_obj_t *pRightVolume;
 	lv_obj_t *pCtrlMode;
 	lv_obj_t *pUniformVolume;
+
+
 	lv_obj_t *pTipsLabel;
 	lv_style_t *pTipsStyle;
 	void *pTipsAnim;
@@ -263,6 +265,7 @@ int32_t SetUniformCheckState(uint16_t u16Channel, bool boIsCheck)
 
 static lv_theme_t *s_pTheme = NULL;
 static lv_obj_t *s_pTableView = NULL;
+static lv_group_t *s_pGroup = NULL;
 
 lv_signal_func_t s_pOrgSliderFun = NULL;
 
@@ -439,6 +442,16 @@ int32_t ReleaseVolumeCtrlGroup(
 
 		lv_mem_free(pGroup->pTipsStyle);
 		pGroup->pTipsStyle = NULL;
+
+	}
+
+	{
+		uint32_t i;
+		lv_obj_t **p2ObjTmp = (lv_obj_t **)pGroup;
+		for (i = 0; i < 4; i++)
+		{
+			lv_group_remove_obj(p2ObjTmp[i]);
+		}
 
 	}
 
@@ -644,6 +657,8 @@ int32_t CreateVolumeCtrlGroup(
 		for (i = 0; i < 4; i++)
 		{
 			lv_obj_set_free_ptr(p2ObjTmp[i], pGroup);
+
+			lv_group_add_obj(s_pGroup, p2ObjTmp[i]);
 		}
 
 	}
@@ -1011,6 +1026,36 @@ void lv_tabview_action(lv_obj_t *pTV, uint16_t u16CurTable)
 	}
 }
 
+static void group_focus_cb(lv_group_t * group)
+{
+	//lv_win_focus(win, lv_group_get_focused(g), 200);
+}
+
+static void style_mod(lv_style_t * style)
+{
+#if LV_COLOR_DEPTH != 1
+	/*Make the style to be a little bit orange*/
+	style->body.border.opa = LV_OPA_COVER;
+	style->body.border.color = LV_COLOR_ORANGE;
+
+	/*If not empty or has border then emphasis the border*/
+	if (style->body.empty == 0 || style->body.border.width != 0) 
+		style->body.border.width = LV_DPI / 40;
+
+	//style->body.main_color = lv_color_mix(style->body.main_color, LV_COLOR_ORANGE, LV_OPA_70);
+	//style->body.grad_color = lv_color_mix(style->body.grad_color, LV_COLOR_ORANGE, LV_OPA_70);
+	//style->body.shadow.color = lv_color_mix(style->body.shadow.color, LV_COLOR_ORANGE, LV_OPA_60);
+
+	//style->text.color = lv_color_mix(style->text.color, LV_COLOR_ORANGE, LV_OPA_70);
+#else
+	style->body.border.opa = LV_OPA_COVER;
+	style->body.border.color = LV_COLOR_BLACK;
+	style->body.border.width = 3;
+
+#endif
+
+}
+
 int32_t CreateTableView(void)
 {
 
@@ -1036,6 +1081,42 @@ int32_t CreateTableView(void)
 
 	lv_obj_t *tv = lv_tabview_create(lv_scr_act(), NULL);
 
+
+#if 0
+	{
+		extern const lv_img_t img_bubble_pattern;
+		lv_obj_t *wp = lv_img_create(lv_scr_act(), NULL);
+		lv_img_set_src(wp, &img_bubble_pattern);
+		lv_obj_set_width(wp, LV_HOR_RES * 6);
+		lv_obj_set_protect(wp, LV_PROTECT_POS);
+
+		lv_obj_set_parent(wp, ((lv_tabview_ext_t *)tv->ext_attr)->content);
+		lv_obj_set_pos(wp, 0, -5);
+	}
+#endif
+
+
+	
+	{
+		bool keyboard_read(lv_indev_data_t * data);
+
+		s_pGroup = lv_group_create();
+		lv_group_set_focus_cb(s_pGroup, group_focus_cb);
+		lv_group_set_style_mod_cb(s_pGroup, style_mod);
+
+		lv_indev_drv_t kb_drv;
+		kb_drv.type = LV_INDEV_TYPE_KEYPAD;
+		kb_drv.read = keyboard_read;
+		lv_indev_t *kb_indev = lv_indev_drv_register(&kb_drv);
+		lv_indev_set_group(kb_indev, s_pGroup);
+
+		if (s_pGroup != NULL)
+		{
+			lv_group_add_obj(s_pGroup, tv);
+		}
+
+	}
+
 	lv_obj_t *pTab[_Tab_Reserved] = { NULL };
 
 	uint8_t i;
@@ -1049,6 +1130,8 @@ int32_t CreateTableView(void)
 		lv_page_set_scrl_height(pTab[i], lv_obj_get_height(pTab[i]) - 16);
 		lv_page_set_sb_mode(pTab[i], LV_SB_MODE_OFF);
 	}
+
+
 
 	CreateTable(pTab[_Tab_Input_PC_Ctrl], _Tab_Input_PC_Ctrl);
 
