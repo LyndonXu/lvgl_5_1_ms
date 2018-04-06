@@ -26,6 +26,9 @@
 #include "lv_examples/lv_tests/lv_test_group/lv_test_group.h"
 #include "lv_examples/lv_tests/lv_test.h"
 #include "lv_examples/lv_tutorial/8_animations/lv_tutorial_animations.h"
+
+#include "gui.h"
+
  /*********************
  *      DEFINES
  *********************/
@@ -70,8 +73,6 @@ int main(int argc, char** argv)
 	//lv_test_theme_1(th);
 	if (1)
 	{
-
-		int32_t CreateTableView(void);
 		CreateTableView();
 	}
 
@@ -96,18 +97,6 @@ int main(int argc, char** argv)
 
 	//lv_test_group_1();
 	//lv_test_img_1();
-#if 1
-	/*Create a Label on the currently active screen*/
-	lv_obj_t * label1 = lv_label_create(lv_scr_act(), NULL);
-
-	/*Modify the Label's text*/
-	lv_label_set_text(label1, "Hello world******************!");
-
-	/* Align the Label to the center
-	 * NULL means align on parent (which is the screen now)
-	 * 0, 0 at the end means an x, y offset after alignment*/
-	lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, -50);
-#endif
 	while (1)
 	{
 		/* Periodically call the lv_task handler.
@@ -118,18 +107,44 @@ int main(int argc, char** argv)
 			static int cnt = 0;
 			if (cnt == 25)
 			{
-				lv_mem_monitor_t stMemMonitor;
-				char c8Buf[64];
-
 				cnt = 0;
+				{
+					static lv_mem_monitor_t stMemMonitor_bak;
+					static lv_obj_t * label = NULL;
+					lv_mem_monitor_t stMemMonitor;
+					char c8Buf[64];
 
-				lv_mem_monitor(&stMemMonitor);
-				sprintf(c8Buf, "Total: %d, free: %d%%, using: %d",
-					stMemMonitor.total_size, stMemMonitor.free_size * 100 / stMemMonitor.total_size,
-					stMemMonitor.total_size - stMemMonitor.free_size);
-				lv_label_set_text(label1, c8Buf);
-				lv_obj_set_top(label1, true);
+
+					lv_mem_monitor(&stMemMonitor);
+					sprintf(c8Buf, "Total: %d, free: %d%%, using: %d",
+						stMemMonitor.total_size, stMemMonitor.free_size * 100 / stMemMonitor.total_size,
+						stMemMonitor.total_size - stMemMonitor.free_size);
+					if (label != NULL)
+					{
+						lv_obj_del(label);
+					}
+					label = lv_label_create(lv_scr_act(), NULL);
+					if (label != NULL)
+					{
+						lv_label_set_text(label, c8Buf);
+						lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, -50);
+					}
+				}
 			
+			}
+			if (cnt == 6)
+			{
+				static uint8_t u8Cnt = 0;
+				u8Cnt++;
+
+				if (u8Cnt == 40)
+				{
+					StVolume stVolume = { rand(), rand() };
+					SetAudioVolume(6, stVolume);
+					ReflushActiveTable(0, 6);
+					u8Cnt = 0;
+				}
+
 			}
 			if (cnt == 12)
 			{

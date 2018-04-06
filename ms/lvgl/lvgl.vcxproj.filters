@@ -1226,6 +1226,7 @@
     <ClInclude Include="..\SDL2-2.0.8\include\SDL2\SDL_vulkan.h">
       <Filter>SDL\include\SDL2</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\gui.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\lv_examples\lv_apps\benchmark\benchmark_bg.png">

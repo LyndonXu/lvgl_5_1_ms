@@ -54,7 +54,13 @@ bool keyboard_read(lv_indev_data_t * data)
 {
     data->state = state;
     data->key = keycode_to_ascii(last_key);
-
+#if 0
+	if (((data->key <= LV_GROUP_KEY_LEFT) && (data->key >= LV_GROUP_KEY_UP))
+		|| (data->key == LV_GROUP_KEY_NEXT) || (data->key == LV_GROUP_KEY_PREV))
+	{
+		data->state = LV_INDEV_STATE_REL;
+	}
+#endif
     return false;
 }
 
