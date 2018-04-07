@@ -11,7 +11,16 @@
 #ifndef GUI_H_
 #define GUI_H_
 
+#include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
 
+#include "lvgl/lvgl.h"
+
+#ifdef _WIN32
+#define __weak
+#endif
 typedef enum _tagEmAudioCtrlMode
 {
 	_Audio_Ctrl_Mode_Normal = 0,	/* left to left, right to right */
@@ -164,11 +173,12 @@ enum
 	_Tab_Output,
 	_Tab_Other_Ctrl,
 	_Tab_SYS_Ctrl,
+	
+	_Tab_Reserved,
 	_Tab_Volume_Show,
 	_Tab_Reserved1,
 
 
-	_Tab_Reserved,
 };
 
 
@@ -188,25 +198,36 @@ int32_t CreateTableView(void);
 int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel);
 
 
-int GetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode *pMode);
-int SetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode emMode);
+int32_t GetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode *pMode);
+int32_t SetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode emMode);
+int32_t SendAudioCtrlModeCmd(uint16_t u16Channel, EmAudioCtrlMode emMode);
 void GetAllAudioCtrlMode(EmAudioCtrlMode emAudioCtrlMode[TOTAL_MODE_CTRL]);
 void SetAllAudioCtrlMode(EmAudioCtrlMode emAudioCtrlMode[TOTAL_MODE_CTRL]);
 
 
-int SetAudioVolume(uint16_t u16Channel, StVolume stVolume);
-int GetAudioVolume(uint16_t u16Channel, StVolume *pVolume);
+int32_t GetAudioVolume(uint16_t u16Channel, StVolume *pVolume);
+int32_t SetAudioVolume(uint16_t u16Channel, StVolume stVolume);
+int32_t SendAudioVolumeCmd(uint16_t u16Channel, StVolume stVolume);
 void GetAllAudioVolume(StVolume stVolume[TOTAL_VOLUME_CHANNEL]);
 void SetAllAudioVolume(StVolume stVolume[TOTAL_VOLUME_CHANNEL]);
 
 
-int GetPhantomPowerState(uint16_t u16Channel, bool *pState);
-int SetPhantomPowerState(uint16_t u16Channel, bool boIsEnable);
+int32_t GetPhantomPowerState(uint16_t u16Channel, bool *pState);
+int32_t SetPhantomPowerState(uint16_t u16Channel, bool boIsEnable);
+int32_t SendPhantomPowerStateCmd(uint16_t u16Channel, bool boIsEnable);
 void GetAllPhantomPowerState(bool boState[PHANTOM_POWER_CTRL]);
 void SetAllPhantomPowerState(bool boState[PHANTOM_POWER_CTRL]);
 
 
+uint8_t GetInputEnableState(void);
 int32_t SetInputEnableState(uint8_t u8NewState);
+int32_t SendInputEnableStateCmd(uint8_t u8NewState);
 uint8_t GetOutputEnableState(void);
+int32_t SetOutputEnableState(uint8_t u8NewState);
+int32_t SendOutputEnableStateCmd(uint8_t u8NewState);
+
+
+int32_t SendMemeoryCtrlCmd(uint16_t u16Channel, bool boIsSave);
+int32_t SendFactoryCtrlCmd(void);
 
 #endif // GUI_H_

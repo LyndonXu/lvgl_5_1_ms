@@ -4786,9 +4786,14 @@ const StCHS_24_4Bit *c_pArrCHS[] =
 	&stCHS_24_24_A1F9,
 };
 #endif
-
-static const uint8_t * lv_font_get_bitmap_chs_24(const lv_font_t * font, uint32_t unicode_letter);
-const int16_t lv_font_get_width_chs_24(const lv_font_t * font, uint32_t unicode_letter);
+#ifndef __arm__
+static const 
+#endif
+	uint8_t * lv_font_get_bitmap_chs_24(const lv_font_t * font, uint32_t unicode_letter);
+#ifndef __arm__
+static const 
+#endif
+	int16_t lv_font_get_width_chs_24(const lv_font_t * font, uint32_t unicode_letter);
 
 lv_font_t lv_font_chs_24 =
 {
@@ -4810,7 +4815,10 @@ lv_font_t lv_font_chs_24 =
 };
 
 
-static const uint8_t * lv_font_get_bitmap_chs_24(const lv_font_t * font, uint32_t unicode_letter)
+#ifndef __arm__
+static const 
+#endif
+	uint8_t * lv_font_get_bitmap_chs_24(const lv_font_t * font, uint32_t unicode_letter)
 {
 	if (unicode_letter < 32)
 	{
@@ -4823,7 +4831,7 @@ static const uint8_t * lv_font_get_bitmap_chs_24(const lv_font_t * font, uint32_
 #else
 		const StCHS_24_4Bit_Half *pCHS = &stCHS_24_12_0020;
 		pCHS += (unicode_letter - 32);
-		return pCHS[0].c8FontArr;
+		return (uint8_t *)pCHS[0].c8FontArr;
 #endif
 	}
 	{
@@ -4862,16 +4870,19 @@ static const uint8_t * lv_font_get_bitmap_chs_24(const lv_font_t * font, uint32_
 		{
 			if (pCHS->u16MachineCode == (uint16_t)unicode_letter)
 			{
-				return pCHS->c8FontArr;
+				return (uint8_t *)pCHS->c8FontArr;
 			}
 			pCHS++;
 		}
-		return pCHSEnd->c8FontArr;
+		return (uint8_t *)pCHSEnd->c8FontArr;
 	}
 #endif
 }
 
-const int16_t lv_font_get_width_chs_24(const lv_font_t * font, uint32_t unicode_letter)
+#ifndef __arm__
+static const 
+#endif
+	int16_t lv_font_get_width_chs_24(const lv_font_t * font, uint32_t unicode_letter)
 {
 	if (unicode_letter < 128 && unicode_letter > 31)
 	{

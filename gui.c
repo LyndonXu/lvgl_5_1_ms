@@ -7,18 +7,15 @@
 * 日期：2018年04月06日
 *******************************************************************************/
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "lvgl/lvgl.h"
 #include "gui.h"
 
 
 #ifndef _WIN32
 #define printf(x, ...)
 #endif
+
+#define SW_WIDTH	84
+#define SW_HTIGHT	42
 
 extern lv_font_t lv_font_chs_24;
 
@@ -33,7 +30,7 @@ const char *c_pCtrlMode[_Audio_Ctrl_Mode_Reserved] =
 	"右静音",		//"R Mute",
 	"静音",		//"Mute",
 	"左→右",		//"R Use L",
-	"右←左",		//"L Use R",
+	"右→左",		//"L Use R",
 	"混合",		//"Mux",
 };/**/
 
@@ -88,8 +85,8 @@ const char *c_pTableName[_Tab_Reserved] =
 	"输出",
 	"其他",
 	"系统设置",
-	"音量采集",
-	"保留",
+//	"音量采集",
+//	"保留",
 };
 const uint8_t c_u8CtrlMode4[] =
 {
@@ -121,6 +118,11 @@ int32_t SetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode emMode)
 	s_stTotalCtrlMemroy.emAudioCtrlMode[u16Channel] = emMode;
 	return 0;
 }
+__weak int32_t SendAudioCtrlModeCmd(uint16_t u16Channel, EmAudioCtrlMode emMode)
+{
+	printf("%s: channel %d, mode %d\n", __FUNCTION__, u16Channel, emMode);
+	return 0;
+}
 
 void GetAllAudioCtrlMode(EmAudioCtrlMode emAudioCtrlMode[TOTAL_MODE_CTRL])
 {
@@ -148,6 +150,14 @@ int32_t SetAudioVolume(uint16_t u16Channel, StVolume stVolume)
 	memcpy(s_stTotalCtrlMemroy.stVolume + u16Channel, &stVolume, sizeof(StVolume));
 	return 0;
 }
+
+__weak int32_t SendAudioVolumeCmd(uint16_t u16Channel, StVolume stVolume)
+{
+	printf("%s: channel %d, volume %d, %d\n", __FUNCTION__, u16Channel, 
+		stVolume.u8Channel1, stVolume.u8Channel2);
+	return 0;
+}
+
 
 int32_t GetAudioVolume(uint16_t u16Channel, StVolume *pVolume)
 {
@@ -207,6 +217,14 @@ int32_t SetPhantomPowerState(uint16_t u16Channel, bool boIsEnable)
 	return 0;
 }
 
+__weak int32_t SendPhantomPowerStateCmd(uint16_t u16Channel, bool boIsEnable)
+{
+	printf("%s: channel %d, mode %d\n", __FUNCTION__, u16Channel, boIsEnable);
+
+	return 0;
+}
+
+
 void GetAllPhantomPowerState(bool boState[PHANTOM_POWER_CTRL])
 {
 	int i;
@@ -235,6 +253,14 @@ int32_t SetInputEnableState(uint8_t u8NewState)
 	s_stTotalCtrlMemroy.u8AINChannelEnableState = u8NewState;
 	return 0;
 }
+
+__weak int32_t SendInputEnableStateCmd(uint8_t u8NewState)
+{
+	printf("%s, state %02x\n", __FUNCTION__, u8NewState);
+	return 0;
+}
+
+
 uint8_t GetOutputEnableState(void)
 {
 	return s_stTotalCtrlMemroy.u8OutputChannelEnableState;
@@ -245,6 +271,24 @@ int32_t SetOutputEnableState(uint8_t u8NewState)
 	s_stTotalCtrlMemroy.u8OutputChannelEnableState = u8NewState;
 	return 0;
 }
+
+__weak int32_t SendOutputEnableStateCmd(uint8_t u8NewState)
+{
+	printf("%s, state %02x\n", __FUNCTION__, u8NewState);
+	return 0;
+}
+
+__weak int32_t SendMemeoryCtrlCmd(uint16_t u16Channel, bool boIsSave)
+{
+	printf("%s, %s channel %d\n", __FUNCTION__, boIsSave ? "save" : "load", u16Channel);
+	return 0;
+}
+__weak int32_t SendFactoryCtrlCmd(void)
+{
+	printf("%s\n", __FUNCTION__);
+	return 0;
+}
+
 
 
 
@@ -273,7 +317,7 @@ lv_res_t ActionSliderCB(struct _lv_obj_t * obj)
 
 	printf("slider value is: %d\n", u16NewValue);
 	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
-	if (pGroup->boIsFixUniformVoume || lv_cb_is_checked(pGroup->pUniformVolume))
+	if (pGroup->boIsFixUniformVoume || lv_sw_get_state(pGroup->pUniformVolume))
 	{
 		if (obj == pGroup->pLeftVolume)
 		{
@@ -297,6 +341,7 @@ lv_res_t ActionSliderCB(struct _lv_obj_t * obj)
 			stVolume.u8Channel1 = (uint8_t)lv_slider_get_value(pGroup->pLeftVolume);
 		}
 		SetAudioVolume(pGroup->u8Index, stVolume);
+		SendAudioVolumeCmd(pGroup->u8Index, stVolume);
 	}
 	do
 	{
@@ -369,11 +414,17 @@ lv_res_t ActionUniformCB(struct _lv_obj_t * obj)
 	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
 	(void)pGroup;
 
+#if 1
+	printf("the %dth check box is: %s\n", pGroup->u8Index,
+		lv_sw_get_state(obj) ? "ON" : "OFF");
+
+	SetUniformCheckState(pGroup->u8Index, lv_sw_get_state(obj));
+#else
 	printf("the %dth check box is: %s\n", pGroup->u8Index, 
 		lv_cb_is_checked(obj) ? "check" : "uncheck");
 
 	SetUniformCheckState(pGroup->u8Index, lv_cb_is_checked(obj));
-
+#endif
 	return LV_RES_OK;
 }
 
@@ -387,6 +438,8 @@ lv_res_t ActionCtrlModeDDlist(struct _lv_obj_t * obj)
 		lv_ddlist_get_selected(obj));
 
 	SetAudioCtrlMode(pGroup->u8Index,
+		(EmAudioCtrlMode)(pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]));
+	SendAudioCtrlModeCmd(pGroup->u8Index,
 		(EmAudioCtrlMode)(pGroup->pCtrlModeIndex[lv_ddlist_get_selected(obj)]));
 
 	return LV_RES_OK;
@@ -541,7 +594,7 @@ int32_t CreateVolumeCtrlGroup(
 			goto err;
 		}
 
-		lv_obj_set_size(pObjTmp, 40, 256);
+		lv_obj_set_size(pObjTmp, SW_HTIGHT, 256);
 		lv_slider_set_range(pObjTmp, 0, 255);
 
 		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_LEFT, 0, -20);
@@ -562,7 +615,31 @@ int32_t CreateVolumeCtrlGroup(
 		pGroup->pRightVolume = pObjTmp;
 	}
 
-	{/* check box for uniform volume */
+	{
+		/* check box for uniform volume */
+#if 1
+		lv_obj_t *pLab = NULL;
+		lv_obj_t *pObjTmp = lv_sw_create(pParent, NULL);
+		if (pObjTmp == NULL)
+		{
+			goto err;
+		}
+		lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
+		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_BOTTOM_LEFT, -10, 20);
+		pGroup->pUniformVolume = pObjTmp;
+
+
+		pLab = lv_label_create(pParent, NULL);
+		lv_label_set_text(pLab, CHS_TO_UTF8("统一音量"));
+		lv_obj_align(pLab, pGroup->pCtrlMode, LV_ALIGN_IN_BOTTOM_RIGHT, 10, 53);
+		
+		if (boIsFixUniformVoume)
+		{
+			lv_sw_on(pObjTmp);
+			lv_obj_set_click(pObjTmp, false);
+		}
+
+#else
 		lv_obj_t *pObjTmp = lv_cb_create(pParent, NULL);
 		if (pObjTmp == NULL)
 		{
@@ -580,6 +657,7 @@ int32_t CreateVolumeCtrlGroup(
 			/*lv_cb_set_inactive(pObjTmp);*/
 			lv_obj_set_click(pObjTmp, false);
 		}
+#endif
 		pGroup->boIsFixUniformVoume = boIsFixUniformVoume;
 	}
 
@@ -610,9 +688,11 @@ int32_t CreateVolumeCtrlGroup(
 
 	lv_slider_set_action(pGroup->pLeftVolume, ActionSliderCB);
 	lv_slider_set_action(pGroup->pRightVolume, ActionSliderCB);
-
+#if 1
+	lv_sw_set_action(pGroup->pUniformVolume, ActionUniformCB);
+#else
 	lv_cb_set_action(pGroup->pUniformVolume, ActionUniformCB);
-
+#endif
 	lv_ddlist_set_action(pGroup->pCtrlMode, ActionCtrlModeDDlist);
 
 	{
@@ -653,16 +733,21 @@ lv_res_t ActionMemoryMBoxCB(lv_obj_t *btn, const char *txt)
 	if (strstr(txt, s_c8StrLoad) != NULL)
 	{
 		printf("%s %d\n", "载入", pGroup->u8TmpMemorySelect);
+		SendMemeoryCtrlCmd(pGroup->u8TmpMemorySelect, false);
 	}
 	else
 	{
 		printf("%s %d\n", "保存", pGroup->u8TmpMemorySelect);
+		SendMemeoryCtrlCmd(pGroup->u8TmpMemorySelect, true);
+	}
+	if (pGroup->pMBox != NULL)
+	{
+		lv_group_remove_obj(pGroup->pMBox);
+		pGroup->pMBox = NULL;
 	}
 
 	lv_mbox_start_auto_close(pParent, 100);
 
-	lv_group_remove_obj(pGroup->pMBox);
-	pGroup->pMBox = NULL;
 
 	return LV_RES_INV;
 }
@@ -728,6 +813,7 @@ int32_t ReleaseMemoryCtrl(StMemoryCtrlGroup *pGroup)
 lv_res_t ActionFactoryCB(lv_obj_t *pObj)
 {
 	printf("%s\n", __FUNCTION__);
+	SendFactoryCtrlCmd();
 	return LV_RES_OK;
 }
 
@@ -837,8 +923,9 @@ lv_res_t ActionPhantomPowerCB(lv_obj_t *pObj)
 	{
 		if (pObj == pGroup->pCBArr[i])
 		{
-			printf("set the %dth phantom power %s\n", i, lv_cb_is_checked(pObj) ? "ON" : "OFF");
-			SetPhantomPowerState(i, lv_cb_is_checked(pObj));
+			printf("set the %dth phantom power %s\n", i, lv_sw_get_state(pObj) ? "ON" : "OFF");
+			SetPhantomPowerState(i, lv_sw_get_state(pObj));
+			SendPhantomPowerStateCmd(i, lv_sw_get_state(pObj));
 			break;
 		}
 	}
@@ -889,8 +976,26 @@ int32_t CreatePhantomPowerCtrl(
 		for (j = 0; j < PHANTOM_POWER_CTRL; j++)
 		{
 			char c8Str[32];
-			pObjTmp = lv_cb_create(pParent, NULL);
+			lv_obj_t *pLab;
 			sprintf(c8Str, "第%d组", j + 1);
+#if 1
+			pObjTmp = lv_sw_create(pParent, NULL);
+			lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
+			lv_obj_set_pos(pObjTmp, u16XPos + j * 180, u16YPos + 50);
+			pGroup->pCBArr[j] = pObjTmp;
+			if (pGlobalGroup != NULL)
+			{
+				lv_group_add_obj(pGlobalGroup, pObjTmp);
+			}
+			lv_sw_set_action(pObjTmp, ActionPhantomPowerCB);
+			lv_obj_set_free_ptr(pObjTmp, pGroup);
+
+			pLab = lv_label_create(pParent, NULL);
+			lv_label_set_text(pLab, CHS_TO_UTF8(c8Str));
+			lv_obj_align(pLab, pObjTmp, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+
+#else
+			pObjTmp = lv_cb_create(pParent, NULL);
 			lv_cb_set_text(pObjTmp, CHS_TO_UTF8(c8Str));
 			lv_obj_set_pos(pObjTmp, u16XPos + j * 160, u16YPos + 40);
 			pGroup->pCBArr[j] = pObjTmp;
@@ -900,6 +1005,7 @@ int32_t CreatePhantomPowerCtrl(
 			}
 			lv_obj_set_free_ptr(pObjTmp, pGroup);
 			lv_cb_set_action(pObjTmp, ActionPhantomPowerCB);
+#endif
 		}
 	}
 
@@ -920,9 +1026,16 @@ int32_t RebulidPhantomPowerCtrlVaule(StPhantomPowerCtrlGroup *pGroup)
 		bool boSetValue = false;
 		GetPhantomPowerState(i, &boSetValue);
 
-		if (lv_cb_is_checked(pGroup->pCBArr[i]) != boSetValue)
+		if (lv_sw_get_state(pGroup->pCBArr[i]) != boSetValue)
 		{
-			lv_cb_set_checked(pGroup->pCBArr[i], boSetValue);
+			if (boSetValue)
+			{
+				lv_sw_on(pGroup->pCBArr[i]);
+			}
+			else
+			{
+				lv_sw_off(pGroup->pCBArr[i]);
+			}
 		}
 	}
 
@@ -940,7 +1053,7 @@ lv_res_t ActionInputEnableCB(lv_obj_t *pObj)
 		if (pGroup->pCBArr[i] == pObj)
 		{
 			uint8_t u8State = GetInputEnableState();
-			if (lv_cb_is_checked(pObj))
+			if (lv_sw_get_state(pObj))
 			{
 				u8State |= (1 << i);
 			}
@@ -949,7 +1062,8 @@ lv_res_t ActionInputEnableCB(lv_obj_t *pObj)
 				u8State &= (~(1 << i));
 			}
 			SetInputEnableState(u8State);
-			printf("set the %dth input channel %s\n", i, lv_cb_is_checked(pObj) ? "ON" : "OFF");
+			SendInputEnableStateCmd(u8State);
+			printf("set the %dth input channel %s\n", i, lv_sw_get_state(pObj) ? "ON" : "OFF");
 			
 			break;
 		}
@@ -1000,18 +1114,24 @@ int32_t CreateInputEnableCtrl(
 		uint16_t /*i, */j;
 		for (j = 0; j < ENABLE_INPUT_CTRL; j++)
 		{
+			lv_obj_t *pLab;
 			char c8Str[32];
-			pObjTmp = lv_cb_create(pParent, NULL);
 			sprintf(c8Str, "第%d组", j + 1);
-			lv_cb_set_text(pObjTmp, CHS_TO_UTF8(c8Str));
-			lv_obj_set_pos(pObjTmp, u16XPos + j % 3 * 130, u16YPos + 40 + ((j / 3) * 40));
+			pObjTmp = lv_sw_create(pParent, NULL);
+			lv_obj_set_pos(pObjTmp, u16XPos + j % 2 * 180, u16YPos + 40 + ((j / 2) * 65));
+			lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
 			pGroup->pCBArr[j] = pObjTmp;
 			if (pGlobalGroup != NULL)
 			{
 				lv_group_add_obj(pGlobalGroup, pObjTmp);
 			}
 			lv_obj_set_free_ptr(pObjTmp, pGroup);
-			lv_cb_set_action(pObjTmp, ActionInputEnableCB);
+			lv_sw_set_action(pObjTmp, ActionInputEnableCB);
+
+
+			pLab = lv_label_create(pParent, NULL);
+			lv_label_set_text(pLab, CHS_TO_UTF8(c8Str));
+			lv_obj_align(pLab, pObjTmp, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 		}
 	}
 
@@ -1032,9 +1152,16 @@ int32_t RebulidInputEnableCtrlVaule(StInputEnableCtrlGroup *pGroup)
 	for (i = 0; i < ENABLE_INPUT_CTRL; i++)
 	{
 		bool boSetValue = (u8State & (1 << i)) != 0;
-		if (lv_cb_is_checked(pGroup->pCBArr[i]) != boSetValue)
+		if (lv_sw_get_state(pGroup->pCBArr[i]) != boSetValue)
 		{
-			lv_cb_set_checked(pGroup->pCBArr[i], boSetValue);
+			if (boSetValue)
+			{
+				lv_sw_on(pGroup->pCBArr[i]);
+			}
+			else
+			{
+				lv_sw_off(pGroup->pCBArr[i]);
+			}
 		}
 	}
 
@@ -1050,7 +1177,7 @@ lv_res_t ActionOutputEnableCB(lv_obj_t *pObj)
 		if (pGroup->pCBArr[i] == pObj)
 		{
 			uint8_t u8State = GetOutputEnableState();
-			if (lv_cb_is_checked(pObj))
+			if (lv_sw_get_state(pObj))
 			{
 				u8State |= (1 << i);
 			}
@@ -1059,8 +1186,9 @@ lv_res_t ActionOutputEnableCB(lv_obj_t *pObj)
 				u8State &= (~(1 << i));
 			}
 			SetOutputEnableState(u8State);
+			SendOutputEnableStateCmd(u8State);
 
-			printf("set the %dth output channel %s\n", i, lv_cb_is_checked(pObj) ? "ON" : "OFF");
+			printf("set the %dth output channel %s\n", i, lv_sw_get_state(pObj) ? "ON" : "OFF");
 			break;
 		}
 	}
@@ -1115,16 +1243,22 @@ int32_t CreateOutputEnableCtrl(
 		};
 		for (j = 0; j < ENABLE_OUTPUT_CTRL; j++)
 		{
-			pObjTmp = lv_cb_create(pParent, NULL);
-			lv_cb_set_text(pObjTmp, pOutName[j]);
-			lv_obj_set_pos(pObjTmp, u16XPos + j % 3 * 130, u16YPos + 40 + ((j / 3) * 40));
+			lv_obj_t *pLab;
+			pObjTmp = lv_sw_create(pParent, NULL);
+			lv_obj_set_pos(pObjTmp, u16XPos + j % 2 * 180, u16YPos + 40 + ((j / 2) * 65));
+			lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
 			pGroup->pCBArr[j] = pObjTmp;
 			if (pGlobalGroup != NULL)
 			{
 				lv_group_add_obj(pGlobalGroup, pObjTmp);
 			}
 			lv_obj_set_free_ptr(pObjTmp, pGroup);
-			lv_cb_set_action(pObjTmp, ActionOutputEnableCB);
+			lv_sw_set_action(pObjTmp, ActionOutputEnableCB);
+
+			pLab = lv_label_create(pParent, NULL);
+			lv_label_set_text(pLab, CHS_TO_UTF8(pOutName[j]));
+			lv_obj_align(pLab, pObjTmp, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+
 		}
 	}
 
@@ -1145,9 +1279,16 @@ int32_t RebulidOutputEnableCtrlVaule(StOutputEnableCtrlGroup *pGroup)
 	for (i = 0; i < ENABLE_OUTPUT_CTRL; i++)
 	{
 		bool boSetValue = (u8State & (1 << i)) != 0;
-		if (lv_cb_is_checked(pGroup->pCBArr[i]) != boSetValue)
+		if (lv_sw_get_state(pGroup->pCBArr[i]) != boSetValue)
 		{
-			lv_cb_set_checked(pGroup->pCBArr[i], boSetValue);
+			if (boSetValue)
+			{
+				lv_sw_on(pGroup->pCBArr[i]);
+			}
+			else
+			{
+				lv_sw_off(pGroup->pCBArr[i]);
+			}
 		}
 	}
 
@@ -1211,11 +1352,26 @@ int32_t RebulidVolumeCtrlValue(uint16_t u16Index)
 	}
 	if (!pGroup->boIsFixUniformVoume)
 	{
+#if 1
+		if (lv_sw_get_state(pGroup->pUniformVolume) != s_stTotalUnifromCheckState.boUniformCheckState[u16Index])
+		{
+			if (s_stTotalUnifromCheckState.boUniformCheckState[u16Index])
+			{
+				lv_sw_on(pGroup->pUniformVolume);
+			}
+			else
+			{
+				lv_sw_off(pGroup->pUniformVolume);
+			}
+		}
+
+#else
 		if (lv_cb_is_checked(pGroup->pUniformVolume) != s_stTotalUnifromCheckState.boUniformCheckState[u16Index])
 		{
 			lv_cb_set_checked(pGroup->pUniformVolume,
 				s_stTotalUnifromCheckState.boUniformCheckState[u16Index]);
 		}
+#endif
 	}
 	return 0;
 }
@@ -1351,11 +1507,11 @@ int32_t CreateTableOtherCtrl(lv_obj_t *pParent, lv_group_t *pGroup)
 {
 	CreateMemoryCtrl(pParent, pGroup, 20, 20, &s_stMemoryCtrlGroup);
 
-	CreatePhantomPowerCtrl(pParent, pGroup, 20, 150, &s_stPhantomPowerCtrlGroup);
+	CreatePhantomPowerCtrl(pParent, pGroup, 20, 140, &s_stPhantomPowerCtrlGroup);
 
 	CreateInputEnableCtrl(pParent, pGroup, 400 + 20, 20, &s_stInputEnableCtrlGroup);
 	
-	CreateOutputEnableCtrl(pParent, pGroup, 400 + 20, 150, &s_stOutputEnableCtrlGroup);
+	CreateOutputEnableCtrl(pParent, pGroup, 400 + 20, 250, &s_stOutputEnableCtrlGroup);
 	return 0;
 }
 
@@ -1532,14 +1688,14 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 				return -1;
 			}
 
-			if (u32Channel <= _Channel_AIN_1)
+			if (u32Channel <= _Channel_AIN_2)
 			{
 				if (u16ActiveTableIndex != _Tab_Input_1_2)
 				{
 					return 0;
 				}
 			}
-			else if (u32Channel <= _Channel_AIN_4)
+			else if (u32Channel <= _Channel_AIN_5)
 			{
 				if (u16ActiveTableIndex != _Tab_Input_3_5)
 				{
@@ -1587,9 +1743,10 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 
 int32_t CreateTableView(void)
 {
+	lv_theme_t * lv_theme_zen_init(uint16_t hue, lv_font_t *font);
 
 	//lv_font_add(&lv_font_symbol_20, &lv_font_chs_24);
-	s_pTheme = lv_theme_alien_init(120, &lv_font_chs_24);
+	s_pTheme = lv_theme_zen_init(120, &lv_font_chs_24);
 
 	if (s_pTheme == NULL)
 	{
@@ -1609,6 +1766,7 @@ int32_t CreateTableView(void)
     lv_obj_set_style(lv_scr_act(), s_pTheme->bg);
 
 	lv_obj_t *pTableView = lv_tabview_create(lv_scr_act(), NULL);
+	lv_tabview_set_sliding(pTableView, false);
 
 
 #if 0
