@@ -9,6 +9,7 @@
 
 #include "gui.h"
 
+#if USE_LVGL
 
 #ifndef _WIN32
 #define printf(x, ...)
@@ -596,6 +597,7 @@ int32_t CreateVolumeCtrlGroup(
 
 		lv_obj_set_size(pObjTmp, SW_HTIGHT, 256);
 		lv_slider_set_range(pObjTmp, 0, 255);
+		//lv_slider_set_progressive_value(pObjTmp, 20);
 
 		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_LEFT, 0, -20);
 
@@ -1741,6 +1743,16 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 	return 0;
 }
 
+void GroupFocusCB(lv_group_t * pGroup)
+{
+	lv_obj_t *pObj = lv_group_get_focused(pGroup);
+	lv_obj_type_t stType = { NULL };
+	lv_obj_get_type(pObj, &stType);
+	printf("object is: %s\n", stType.type[0]);
+
+}
+
+
 int32_t CreateTableView(void)
 {
 	lv_theme_t * lv_theme_zen_init(uint16_t hue, lv_font_t *font);
@@ -1789,7 +1801,7 @@ int32_t CreateTableView(void)
 
 		s_pGroup = lv_group_create();
 		lv_group_set_style_mod_cb(s_pGroup, GroupStyleMod);
-#ifdef _WIN32
+#if ((defined _WIN32) || 1)
 		lv_indev_drv_t kb_drv;
 		kb_drv.type = LV_INDEV_TYPE_KEYPAD;
 		kb_drv.read = keyboard_read;
@@ -1799,6 +1811,8 @@ int32_t CreateTableView(void)
 		if (s_pGroup != NULL)
 		{
 			lv_group_add_obj(s_pGroup, pTableView);
+
+			lv_group_set_focus_cb(s_pGroup, GroupFocusCB);
 		}
 
 		lv_obj_set_free_ptr(pTableView, s_pGroup);
@@ -1861,4 +1875,7 @@ void BarValueTest(void)
 		lv_bar_set_value(pBar[i], rand()%300);
 	}
 #endif
+
 }
+
+#endif
