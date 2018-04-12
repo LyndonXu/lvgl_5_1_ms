@@ -52,15 +52,10 @@ void keyboard_init(void)
  */
 bool keyboard_read(lv_indev_data_t * data)
 {
+	void SetKeyValue(uint32_t u32Key, bool boIsPress);
+
     data->state = state;
     data->key = keycode_to_ascii(last_key);
-#if 0
-	if (((data->key <= LV_GROUP_KEY_LEFT) && (data->key >= LV_GROUP_KEY_UP))
-		|| (data->key == LV_GROUP_KEY_NEXT) || (data->key == LV_GROUP_KEY_PREV))
-	{
-		data->state = LV_INDEV_STATE_REL;
-	}
-#endif
     return false;
 }
 
@@ -80,6 +75,13 @@ void keyboard_handler(SDL_Event *event)
             break;
 
     }
+#if 1
+	if ((keycode_to_ascii(last_key) == LV_GROUP_KEY_ENTER))
+	{
+		SetKeyValue(LV_GROUP_KEY_ENTER, state == LV_INDEV_STATE_PR);
+	}
+#endif
+
 }
 
 /**********************
