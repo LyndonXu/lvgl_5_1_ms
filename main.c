@@ -159,10 +159,12 @@ int main(int argc, char** argv)
 #else
 		Sleep(1);
 #endif
+#if 0
 		{
 			void flush_style(void);
 			flush_style();
 		}
+#endif
 	}
 
 	return 0;

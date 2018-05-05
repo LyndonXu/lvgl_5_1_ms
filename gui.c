@@ -15,8 +15,13 @@
 #define printf(x, ...)
 #endif
 
-#define SW_WIDTH	84
-#define SW_HTIGHT	42
+#define SW_WIDTH		84
+#define SW_HTIGHT		55
+
+#define SLIDER_WIDTH	60
+
+#define KNOB_WIDTH		3
+#define KNOB_HEIGHT		2
 
 enum 
 {
@@ -601,8 +606,9 @@ int32_t CreateVolumeCtrlGroup(
 			goto err;
 		}
 
-		lv_obj_set_size(pObjTmp, SW_HTIGHT, 256);
+		lv_obj_set_size(pObjTmp, SLIDER_WIDTH, 256);
 		lv_slider_set_range(pObjTmp, 0, 255);
+		lv_slider_set_knob_radio(pObjTmp, KNOB_WIDTH, KNOB_HEIGHT);
 		//lv_slider_set_progressive_value(pObjTmp, 20);
 
 		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_LEFT, 0, -20);
@@ -632,8 +638,9 @@ int32_t CreateVolumeCtrlGroup(
 		{
 			goto err;
 		}
+		lv_slider_set_knob_radio(pObjTmp, KNOB_WIDTH, KNOB_HEIGHT);
 		lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
-		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_BOTTOM_LEFT, -10, 20);
+		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_BOTTOM_LEFT, -10, 15);
 		pGroup->pUniformVolume = pObjTmp;
 
 
@@ -1002,6 +1009,7 @@ int32_t CreatePhantomPowerCtrl(
 #if 1
 			pObjTmp = lv_sw_create(pParent, NULL);
 			lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
+			lv_slider_set_knob_radio(pObjTmp, KNOB_WIDTH, KNOB_HEIGHT);
 			lv_obj_set_pos(pObjTmp, u16XPos + j * 180, u16YPos + 50);
 			pGroup->pCBArr[j] = pObjTmp;
 			if (pGlobalGroup != NULL)
@@ -1139,8 +1147,9 @@ int32_t CreateInputEnableCtrl(
 			char c8Str[32];
 			sprintf(c8Str, "µÚ%d×é", j + 1);
 			pObjTmp = lv_sw_create(pParent, NULL);
-			lv_obj_set_pos(pObjTmp, u16XPos + j % 2 * 180, u16YPos + 40 + ((j / 2) * 65));
+			lv_obj_set_pos(pObjTmp, u16XPos + j % 2 * 180, u16YPos + 40 + ((j / 2) * 63));
 			lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
+			lv_slider_set_knob_radio(pObjTmp, KNOB_WIDTH, KNOB_HEIGHT);
 			pGroup->pCBArr[j] = pObjTmp;
 			if (pGlobalGroup != NULL)
 			{
@@ -1266,8 +1275,9 @@ int32_t CreateOutputEnableCtrl(
 		{
 			lv_obj_t *pLab;
 			pObjTmp = lv_sw_create(pParent, NULL);
-			lv_obj_set_pos(pObjTmp, u16XPos + j % 2 * 180, u16YPos + 40 + ((j / 2) * 65));
+			lv_obj_set_pos(pObjTmp, u16XPos + j % 2 * 180, u16YPos + 40 + ((j / 2) * 63));
 			lv_obj_set_size(pObjTmp, SW_WIDTH, SW_HTIGHT);
+			lv_slider_set_knob_radio(pObjTmp, KNOB_WIDTH, KNOB_HEIGHT);
 			pGroup->pCBArr[j] = pObjTmp;
 			if (pGlobalGroup != NULL)
 			{
