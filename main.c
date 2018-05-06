@@ -32,6 +32,7 @@
  /*********************
  *      DEFINES
  *********************/
+#define TEST_GUI
 
 /**********************
  *      TYPEDEFS
@@ -71,11 +72,12 @@ int main(int argc, char** argv)
 	//lv_theme_t * th = lv_theme_night_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_theme_t * th = lv_theme_alien_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_test_theme_1(th);
-	if (1)
+	//lv_test_btn_1();
+#ifdef TEST_GUI
 	{
 		CreateTableView();
 	}
-
+#endif
 	if (0)
 	{
 		lv_theme_t *s_pTheme = lv_theme_alien_init(200, NULL);
@@ -102,7 +104,7 @@ int main(int argc, char** argv)
 		/* Periodically call the lv_task handler.
 		 * It could be done in a timer interrupt or an OS task too.*/
 		lv_task_handler();
-#if 1
+#ifdef TEST_GUI
 		{
 			static int cnt = 0;
 			if (cnt == 25)

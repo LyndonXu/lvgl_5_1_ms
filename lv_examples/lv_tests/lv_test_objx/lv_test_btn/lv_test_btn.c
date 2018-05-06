@@ -6,6 +6,7 @@
 /*********************
  *      INCLUDES
  *********************/
+#include <stdio.h>
 #include "lv_test_btn.h"
 
 #if USE_LV_BTN && USE_LV_TESTS
@@ -36,6 +37,13 @@ static lv_res_t width_dec(lv_obj_t * btn);
  *   GLOBAL FUNCTIONS
  **********************/
 
+static lv_res_t toggle_click(lv_obj_t * btn)
+{
+	printf("btn state: %d\n", lv_btn_get_state(btn));
+	return LV_RES_OK;
+}
+
+
 /**
  * Create buttons to test their functionalities
  */
@@ -50,9 +58,40 @@ void lv_test_btn_1(void)
     lv_btn_set_state(btn2, LV_BTN_STATE_TGL_REL);
 
     /* Create a button which can be toggled */
+	static lv_style_t style_on;
+	lv_style_copy(&style_on, &lv_style_pretty);
+	style_on.body.radius = LV_RADIUS_CIRCLE;
+	style_on.body.main_color = LV_COLOR_RED;
+	//style_on.body.grad_color = LV_COLOR_RED;
+	style_on.body.grad_color = LV_COLOR_MAKE(0x50, 0x07, 0x02);
+	style_on.body.border.color = LV_COLOR_MARRON;
+	style_on.body.shadow.color = LV_COLOR_MARRON;
+	style_on.body.shadow.width = 10;
+	style_on.body.border.opa = LV_OPA_30;
+
+
+	static lv_style_t style_press;
+	lv_style_copy(&style_press, &style_on);
+	style_press.body.main_color = LV_COLOR_MAKE(0xC0, 0, 0);
+	//style_press.body.grad_color = LV_COLOR_MAKE(0xC0, 0, 0);
+
+	static lv_style_t style_off;
+	lv_style_copy(&style_off, &style_press);
+	style_off.body.main_color = LV_COLOR_MARRON;
+	//style_off.body.grad_color = LV_COLOR_MARRON;
+	style_off.body.border.color = LV_COLOR_MAKE(0x30, 0, 0);
+	style_off.body.shadow.color = LV_COLOR_MAKE(0x30, 0, 0);
+
+
     lv_obj_t * btn3 = lv_btn_create(lv_scr_act(), NULL);
     lv_obj_align(btn3, btn2, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
-    lv_btn_set_toggle(btn3, true);
+	lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, toggle_click);
+	lv_btn_set_style(btn3, LV_BTN_STATE_REL, &style_off);
+	lv_btn_set_style(btn3, LV_BTN_STATE_PR, &style_press);
+	lv_btn_set_style(btn3, LV_BTN_STATE_TGL_PR, &style_press);
+	lv_btn_set_style(btn3, LV_BTN_STATE_TGL_REL, &style_on);
+	lv_obj_set_size(btn3, 2 * LV_DPI / 3, 2 * LV_DPI / 3);
+	lv_btn_set_toggle(btn3, true);
 
     /* Test actions:
      * Press: increase width, Release: decrease width, Long press: delete */
@@ -140,5 +179,7 @@ static lv_res_t width_dec(lv_obj_t * btn)
     lv_obj_set_width(btn, lv_obj_get_width(btn) - (10));
     return LV_RES_OK;
 }
+
+
 
 #endif /*USE_LV_BTN && USE_LV_TESTS*/
