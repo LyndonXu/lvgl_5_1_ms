@@ -115,7 +115,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\C2D.c" />
     <ClCompile Include="..\..\gui.c" />
+    <ClCompile Include="..\..\GUI2DLib.c" />
+    <ClCompile Include="..\..\GUICirc.c" />
+    <ClCompile Include="..\..\GUI_DrawLine.c" />
+    <ClCompile Include="..\..\GUI_DrawPoint.c" />
+    <ClCompile Include="..\..\GUI_DrawPolygon.c" />
+    <ClCompile Include="..\..\GUI_DrawPolyline.c" />
+    <ClCompile Include="..\..\GUI_FillPolygon.c" />
+    <ClCompile Include="..\..\GUI_FillRect.c" />
     <ClCompile Include="..\..\lvgl\lv_core\lv_group.c" />
     <ClCompile Include="..\..\lvgl\lv_core\lv_indev.c" />
     <ClCompile Include="..\..\lvgl\lv_core\lv_obj.c" />
@@ -258,6 +267,7 @@
     <ClCompile Include="..\..\main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\C2D.h" />
     <ClInclude Include="..\..\gui.h" />
     <ClInclude Include="..\..\lvgl\lvgl.h" />
     <ClInclude Include="..\..\lvgl\lv_conf_templ.h" />

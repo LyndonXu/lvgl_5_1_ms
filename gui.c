@@ -788,7 +788,7 @@ lv_res_t ActionMemoryCB(lv_obj_t * obj)
 	lv_obj_t *pParent = lv_obj_get_parent(obj);
 	lv_obj_t *pObjTmp = lv_mbox_create(pParent, NULL);
 	StMemoryCtrlGroup *pGroup = (StMemoryCtrlGroup *)lv_obj_get_free_ptr(obj);
-
+	char c8Str[16];
 
 	pGroup->u8TmpMemorySelect = (uint8_t)lv_ddlist_get_selected(obj);
 
@@ -802,7 +802,8 @@ lv_res_t ActionMemoryCB(lv_obj_t * obj)
 
 	lv_mbox_add_btns(pObjTmp, s_pMemoryMboxBTNs, NULL);
 	lv_obj_align(pObjTmp, obj, LV_ALIGN_IN_TOP_LEFT, 0, 0);
-	lv_mbox_set_text(pObjTmp, "message");
+	sprintf(c8Str, "´æ´¢%d", pGroup->u8TmpMemorySelect + 1);
+	lv_mbox_set_text(pObjTmp, CHS_TO_UTF8(c8Str));
 	lv_mbox_set_action(pObjTmp, ActionMemoryMBoxCB);
 	lv_obj_set_free_ptr(pObjTmp, pGroup);
 	pGroup->pMBox = pObjTmp;
@@ -1616,10 +1617,10 @@ int32_t CreateLogoColorCtrl(lv_obj_t *pParent,
 		lv_obj_set_size(pObjTmp, SW_HTIGHT * 2, SW_HTIGHT);
 		lv_btn_set_toggle(pObjTmp, true);
 
-		lv_btn_set_style(pObjTmp, LV_BTN_STATE_REL, &s_stLogoStyle[i][_Logo_State_REL]);
-		lv_btn_set_style(pObjTmp, LV_BTN_STATE_PR, &s_stLogoStyle[i][_Logo_State_Press]);
-		lv_btn_set_style(pObjTmp, LV_BTN_STATE_TGL_PR, &s_stLogoStyle[i][_Logo_State_Press]);
-		lv_btn_set_style(pObjTmp, LV_BTN_STATE_TGL_REL, &s_stLogoStyle[i][_Logo_State_TGL_REL]);
+		lv_btn_set_style(pObjTmp, LV_BTN_STYLE_REL, &s_stLogoStyle[i][_Logo_State_REL]);
+		lv_btn_set_style(pObjTmp, LV_BTN_STYLE_PR, &s_stLogoStyle[i][_Logo_State_Press]);
+		lv_btn_set_style(pObjTmp, LV_BTN_STYLE_TGL_PR, &s_stLogoStyle[i][_Logo_State_Press]);
+		lv_btn_set_style(pObjTmp, LV_BTN_STYLE_TGL_REL, &s_stLogoStyle[i][_Logo_State_TGL_REL]);
 		
 		lv_obj_set_free_ptr(pObjTmp, pGroup);
 
@@ -1742,7 +1743,6 @@ int32_t CreateTable(lv_obj_t *pTabPage, uint16_t u16TableIndex)
 }
 
 
-static lv_obj_t *pBar[14];
 
 void ActionTabview(lv_obj_t *pTV, uint16_t u16CurTable)
 {
@@ -1902,6 +1902,7 @@ int32_t CreateTableView(void)
 
 	//lv_font_add(&lv_font_symbol_20, &lv_font_chs_24);
 	s_pTheme = lv_theme_zen_init(120, &lv_font_chs_24);
+	//s_pTheme = lv_theme_alien_init(120, &lv_font_chs_24);
 
 	if (s_pTheme == NULL)
 	{

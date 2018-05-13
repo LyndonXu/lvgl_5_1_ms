@@ -458,7 +458,8 @@ static void mbox_init(void)
     lv_style_copy(&bg, theme.panel);
     //bg.body.main_color = lv_color_hsv_to_rgb(_hue, 10, 95);
     //bg.body.grad_color = bg.body.main_color;
-    bg.text.color = lv_color_hsv_to_rgb(_hue, 40, 25);
+    //bg.text.color = lv_color_hsv_to_rgb(_hue, 40, 25);
+	bg.text.color = lv_color_hsv_to_rgb(_hue, 50, 80);
 
     lv_style_copy(&rel, &def);
     rel.body.main_color = lv_color_hsv_to_rgb(_hue, 25, 85);

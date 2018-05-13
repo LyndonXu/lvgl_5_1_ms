@@ -193,6 +193,9 @@
     <Filter Include="SDL\include\SDL2">
       <UniqueIdentifier>{11b6a4d8-64d9-4525-8d8f-d4ce176cf124}</UniqueIdentifier>
     </Filter>
+    <Filter Include="2D">
+      <UniqueIdentifier>{d2239690-7de3-4820-aa11-76424d231d0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\lvgl\lv_core\lv_group.c">
@@ -612,6 +615,33 @@
     </ClCompile>
     <ClCompile Include="..\..\gui.c" />
     <ClCompile Include="..\..\lv_font_chs_24.c" />
+    <ClCompile Include="..\..\GUI_FillPolygon.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUICirc.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUI_DrawLine.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\C2D.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUI2DLib.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUI_DrawPoint.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUI_DrawPolygon.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUI_DrawPolyline.c">
+      <Filter>2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GUI_FillRect.c">
+      <Filter>2D</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\lvgl\lv_core\lv_group.h">
@@ -1227,6 +1257,9 @@
       <Filter>SDL\include\SDL2</Filter>
     </ClInclude>
     <ClInclude Include="..\..\gui.h" />
+    <ClInclude Include="..\..\C2D.h">
+      <Filter>2D</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\lv_examples\lv_apps\benchmark\benchmark_bg.png">
