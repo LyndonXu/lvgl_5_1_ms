@@ -578,12 +578,13 @@ int32_t CreateVolumeCtrlGroup(
 
 		lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8(c8Str));
 
-	    lv_ddlist_set_fix_height(pObjTmp, LV_DPI);
+	    //lv_ddlist_set_fix_height(pObjTmp, LV_DPI);
 	    //lv_ddlist_set_hor_fit(pObjTmp, false);
 
 
 		//lv_obj_set_width(pObjTmp, 300);
 
+		lv_ddlist_set_move_dirction(pObjTmp, true);
 
 #if 1
 		lv_label_set_align(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,

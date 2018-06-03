@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 
 	/*Initialize the HAL for LittlevGL*/
 	hal_init();
-
+	if (0)
 	{
 		const GUI_POINT stArrow[] = {
 			{ 0, -5 },

@@ -445,19 +445,70 @@ static lv_res_t lv_slider_signal(lv_obj_t * slider, lv_signal_t sign, void * par
     lv_coord_t h = lv_obj_get_height(slider);
 
     if(sign == LV_SIGNAL_PRESSED) {
+		lv_indev_get_point(param, &p);
+		if (w > h)
+		{
+			lv_coord_t knob_w = h * ext->knob_radio_h / ext->knob_radio_w;
+			lv_coord_t knob_x = 0;
+			if (ext->knob_in == 0)
+			{
+				knob_x = slider->coords.x1 + w * lv_slider_get_value(slider) /
+					(ext->bar.max_value - ext->bar.min_value + 1);
+			}
+			else
+			{
+				knob_x = slider->coords.x1 + knob_w / 2 +
+					(w - knob_w) * lv_slider_get_value(slider) /
+					(ext->bar.max_value - ext->bar.min_value + 1);
+			}
+			if ((p.x <= knob_x + knob_w / 2) && (p.x >= knob_x - knob_w / 2))
+			{
+				printf("mouse is in the knob\n");
+			}
+			else
+			{
+				printf("mouse is't in the knob\n");
+			}
+		}
+		else
+		{
+			lv_coord_t knob_h = w * ext->knob_radio_h / ext->knob_radio_w;
+			lv_coord_t knob_y = 0;
+			if (ext->knob_in == 0)
+			{
+				knob_y = slider->coords.y2 - h * lv_slider_get_value(slider) /
+					(ext->bar.max_value - ext->bar.min_value + 1);
+			}
+			else
+			{
+				knob_y = slider->coords.y2 - knob_h / 2 - 
+					(h - knob_h) * lv_slider_get_value(slider) /
+					(ext->bar.max_value - ext->bar.min_value + 1);
+			}
+			//p.y -= slider->coords.y1;    /*Modify the point to shift with half knob (important on the start and end)*/
+			if ((p.y <= knob_y + knob_h / 2) && (p.y >= knob_y - knob_h / 2))
+			{
+				printf("mouse is in the knob\n");
+			}
+			else
+			{
+				printf("mouse is't in the knob\n");
+			}
+
+		}
         ext->drag_value = lv_slider_get_value(slider);
     }
     else if(sign == LV_SIGNAL_PRESSING) {
         lv_indev_get_point(param, &p);
         int16_t tmp = 0;
         if(w > h) {
-            lv_coord_t knob_w = h;
-            p.x -= slider->coords.x1 + h / 2;    /*Modify the point to shift with half knob (important on the start and end)*/
+            lv_coord_t knob_w = h * ext->knob_radio_h / ext->knob_radio_w;
+            p.x -= slider->coords.x1 + knob_w / 2;    /*Modify the point to shift with half knob (important on the start and end)*/
             tmp = (int32_t) ((int32_t) p.x * (ext->bar.max_value - ext->bar.min_value + 1)) / (w - knob_w);
             tmp += ext->bar.min_value;
         } else {
-            lv_coord_t knob_h = w;
-            p.y -= slider->coords.y1 + w / 2;    /*Modify the point to shift with half knob (important on the start and end)*/
+            lv_coord_t knob_h = w * ext->knob_radio_h / ext->knob_radio_w;
+            p.y -= slider->coords.y1 + knob_h / 2;    /*Modify the point to shift with half knob (important on the start and end)*/
             tmp = (int32_t) ((int32_t) p.y * (ext->bar.max_value - ext->bar.min_value + 1)) / (h - knob_h);
             tmp = ext->bar.max_value - tmp;     /*Invert the value: smaller value means higher y*/
         }
