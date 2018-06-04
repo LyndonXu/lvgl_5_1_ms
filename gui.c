@@ -613,6 +613,8 @@ int32_t CreateVolumeCtrlGroup(
 		lv_obj_set_size(pObjTmp, SLIDER_WIDTH, 256);
 		lv_slider_set_range(pObjTmp, 0, 255);
 		lv_slider_set_knob_radio(pObjTmp, KNOB_WIDTH, KNOB_HEIGHT);
+		lv_slider_set_knob_in(pObjTmp, true);
+		lv_slider_set_knob_drag_only(pObjTmp, true);
 		//lv_slider_set_progressive_value(pObjTmp, 20);
 
 		lv_obj_align(pObjTmp, pGroup->pCtrlMode, LV_ALIGN_OUT_TOP_LEFT, 0, -20);
