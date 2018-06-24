@@ -171,9 +171,10 @@ enum
 {
 	_Tab_Input_1_2,
 	_Tab_Input_3_5,
-	_Tab_Input_PC_Ctrl,
+	_Tab_Input_I2S_Ctrl,
 	_Tab_Output,
 	_Tab_Other_Ctrl,
+	_Tab_PC_Volume_Ctrl,
 	_Tab_Peripheral_Ctrl,
 	_Tab_SYS_Ctrl,
 	
