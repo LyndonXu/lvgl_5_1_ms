@@ -72,7 +72,11 @@ StVolumeCtrlGroup stVolumeOutputHeaderPhone = { 0 };
 StVolumeCtrlGroup stVolumeOutputInnerSpeaker = { 0 };
 StVolumeCtrlGroup stVolumeOutput = { 0 };
 
-const StVolumeCtrlGroup *c_pValumeCtrlArr[_Channel_Reserved] =
+
+StVolumeCtrlGroup stVolumePCCtrlPlay = { 0 };
+StVolumeCtrlGroup stVolumePCCtrlRecord = { 0 };
+
+const StVolumeCtrlGroup *c_pValumeCtrlArr[TOTAL_VOLUME_CHANNEL + TOTAL_PC_CTRL_MODE_CTRL] =
 {
 	&stVolumeInput1,
 	&stVolumeInput2,
@@ -84,6 +88,10 @@ const StVolumeCtrlGroup *c_pValumeCtrlArr[_Channel_Reserved] =
 	&stVolumeOutputHeaderPhone,
 	&stVolumeOutputInnerSpeaker,
 	&stVolumeOutput,
+
+
+	&stVolumePCCtrlPlay,
+	&stVolumePCCtrlRecord,
 };
 
 
@@ -101,7 +109,7 @@ static StUniformCheckState s_stTotalUnifromCheckState =
 {
 	true, true, true, true, 
 	true, true, true, true,
-	true, true,
+	true, true, true, true,
 };
 
 
@@ -158,8 +166,29 @@ static lv_color24_t const s_stLogoColor[_Logo_Color_Reserved] =
 static StLogoColorCtrl s_stLogoColorCtrl = { {NULL,}, 0xFF };
 static StKeyboardCtrl s_stKeyboardCtrl = { NULL, NULL, true, 0 };
 
+int32_t ChannelToReal(uint16_t u16Channel)
+{
+	if (u16Channel < _Channel_Reserved)
+	{
+		return u16Channel;
+	}
+
+	if (u16Channel >= _Channel_PC_Ctrl && u16Channel < _Channel_PC_Ctrl_Reserved)
+	{
+		return u16Channel - _Channel_PC_Ctrl + _Channel_Reserved;
+	}
+
+	return -1;
+}
+
 int32_t GetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode *pMode)
 {
+	u16Channel = ChannelToReal(u16Channel);
+
+	if (u16Channel >= TOTAL_CHANNEL || pMode == NULL)
+	{
+		return -1;
+	}
 
 	*pMode = s_stTotalCtrlMemroy.emAudioCtrlMode[u16Channel];
 	return 0;
@@ -167,7 +196,9 @@ int32_t GetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode *pMode)
 
 int32_t SetAudioCtrlMode(uint16_t u16Channel, EmAudioCtrlMode emMode)
 {
-	if ((u16Channel >= TOTAL_MODE_CTRL) || (emMode >= _Audio_Ctrl_Mode_Reserved))
+	u16Channel = ChannelToReal(u16Channel);
+
+	if ((u16Channel >= TOTAL_CHANNEL) || (emMode >= _Audio_Ctrl_Mode_Reserved))
 	{
 		return -1;
 	}
@@ -198,7 +229,9 @@ void SetAllAudioCtrlMode(EmAudioCtrlMode emAudioCtrlMode[TOTAL_MODE_CTRL])
 
 int32_t SetAudioVolume(uint16_t u16Channel, StVolume stVolume)
 {
-	if ((u16Channel >= TOTAL_VOLUME_CHANNEL))
+	u16Channel = ChannelToReal(u16Channel);
+
+	if ((u16Channel >= TOTAL_CHANNEL))
 	{
 		return -1;
 	}
@@ -217,7 +250,9 @@ __weak int32_t SendAudioVolumeCmd(uint16_t u16Channel, StVolume stVolume)
 
 int32_t GetAudioVolume(uint16_t u16Channel, StVolume *pVolume)
 {
-	if ((u16Channel >= TOTAL_VOLUME_CHANNEL) || (pVolume == NULL))
+	u16Channel = ChannelToReal(u16Channel);
+
+	if ((u16Channel >= TOTAL_CHANNEL) || (pVolume == NULL))
 	{
 		return -1;
 	}
@@ -242,7 +277,9 @@ void SetAllAudioVolume(StVolume stVolume[TOTAL_VOLUME_CHANNEL])
 
 int32_t SetUniformCheckState(uint16_t u16Channel, bool boIsCheck)
 {
-	if ((u16Channel >= TOTAL_VOLUME_CHANNEL))
+	u16Channel = ChannelToReal(u16Channel);
+
+	if ((u16Channel >= TOTAL_CHANNEL))
 	{
 		return -1;
 	}
@@ -1601,7 +1638,10 @@ int32_t CreateTableInput1To2(lv_obj_t *pTabParent, lv_group_t *pGroup)
 int32_t RebulidVolumeCtrlValue(uint16_t u16Index)
 {
 	const StVolumeCtrlGroup *pGroup = NULL;
-	if (u16Index >= _Channel_Reserved)
+
+	u16Index = ChannelToReal(u16Index);
+
+	if (u16Index >= TOTAL_CHANNEL)
 	{
 		return -1;
 	}
@@ -1810,6 +1850,37 @@ int32_t RebulidTableOtherVaule(void)
 	RebulidOutputEnableCtrlVaule(&s_stOutputEnableCtrlGroup);
 	return 0;
 }
+
+int32_t CreateTablePCVolumeCtrl(lv_obj_t *pTabParent, lv_group_t *pGroup)
+{
+	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 135, &stVolumePCCtrlPlay, _Channel_PC_Ctrl_Play,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "²¥·Å", c_pCtrlModeSpecial);
+
+	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 470, &stVolumePCCtrlRecord, _Channel_PC_Ctrl_Record,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "Â¼ÖÆ", c_pCtrlModeSpecial);
+
+	return 0;
+}
+
+int32_t RebulidTablePCVolumeCtrlVaule(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	RebulidVolumeCtrlValue(_Channel_PC_Ctrl_Play);
+	RebulidVolumeCtrlValue(_Channel_PC_Ctrl_Record);
+
+	return 0;
+}
+int32_t ReleaseTablePCVolumeCtrl(lv_obj_t *pTabParent)
+{
+	ReleaseVolumeCtrlGroup(&stVolumePCCtrlPlay);
+	ReleaseVolumeCtrlGroup(&stVolumePCCtrlRecord);
+	return 0;
+}
+
 
 
 lv_color_t CreateLogoColor(lv_color24_t color, uint32_t opa)
@@ -2104,7 +2175,7 @@ const PFUN_ReleaseTable c_pFUN_ReleaseTable[_Tab_Reserved] =
 	ReleaseTableI2SCtrl,
 	ReleaseTableOutputCtrl,
 	ReleaseTableOtherCtrl,
-	NULL,
+	ReleaseTablePCVolumeCtrl,
 	NULL,
 };
 
@@ -2115,7 +2186,7 @@ const PFUN_CreateTable c_pFUN_CreateTable[_Tab_Reserved] =
 	CreateTableI2SCtrl,
 	CreateTableOutputCtrl,
 	CreateTableOtherCtrl,
-	NULL,
+	CreateTablePCVolumeCtrl,
 	CreateTablePeripheralCtrl,
 	NULL,
 };
@@ -2127,7 +2198,7 @@ const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
 	RebulidTableI2SCtrlVaule,
 	RebulidTableOutputVaule,
 	RebulidTableOtherVaule,
-	NULL,
+	RebulidTablePCVolumeCtrlVaule,
 	RebulidTablePeripheralVaule,
 	NULL,
 };
@@ -2272,11 +2343,6 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 		case _Fun_AudioVolume: 
 		case _Fun_AudioMode:
 		{
-			if (u32Channel >= _Channel_Reserved)
-			{
-				return -1;
-			}
-
 			if (u32Channel <= _Channel_AIN_2)
 			{
 				if (u16ActiveTableIndex != _Tab_Input_1_2)
@@ -2298,9 +2364,20 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 					return 0;
 				}
 			}
-			else
+			else if (u32Channel <= _Channel_InnerSpeaker)
 			{
 				if (u16ActiveTableIndex != _Tab_Output)
+				{
+					return 0;
+				}
+			}
+			else if (u32Channel <= _Channel_Reserved)
+			{
+				return -1;
+			}
+			else if (u32Channel <= _Channel_PC_Ctrl_Record)
+			{
+				if (u16ActiveTableIndex != _Tab_PC_Volume_Ctrl)
 				{
 					return 0;
 				}

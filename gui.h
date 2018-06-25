@@ -50,6 +50,14 @@ enum
 	_Channel_NormalOut,
 
 	_Channel_Reserved,
+
+
+	_Channel_PC_Ctrl = 0x80,
+	_Channel_PC_Ctrl_Play = _Channel_PC_Ctrl,
+	_Channel_PC_Ctrl_Record,
+
+	_Channel_PC_Ctrl_Reserved,
+
 };
 
 #ifndef TOTAL_MODE_CTRL_IN
@@ -90,6 +98,20 @@ enum
 #endif
 
 
+#ifndef TOTAL_PC_CTRL_MODE_CTRL
+#define TOTAL_PC_CTRL_MODE_CTRL			(_Channel_PC_Ctrl_Reserved - _Channel_PC_Ctrl)
+#endif
+
+
+#ifndef TOTAL_PC_CTRL_VOLUME_CHANNEL
+#define TOTAL_PC_CTRL_VOLUME_CHANNEL 			TOTAL_PC_CTRL_MODE_CTRL
+#endif
+
+#ifndef TOTAL_CHANNEL
+#define TOTAL_CHANNEL					(TOTAL_VOLUME_CHANNEL + TOTAL_PC_CTRL_MODE_CTRL)
+#endif
+
+
 typedef struct _tagStVolumeCtrlGroup
 {
 	lv_obj_t *pLeftVolume;
@@ -122,8 +144,8 @@ typedef struct _tagStVolume
 
 typedef struct _tagStMemory
 {
-	StVolume stVolume[TOTAL_VOLUME_CHANNEL];
-	EmAudioCtrlMode emAudioCtrlMode[TOTAL_MODE_CTRL];
+	StVolume stVolume[TOTAL_CHANNEL];
+	EmAudioCtrlMode emAudioCtrlMode[TOTAL_CHANNEL];
 	bool boPhantomPower[PHANTOM_POWER_CTRL];
 	uint8_t u8AINChannelEnableState;
 	uint8_t u8OutputChannelEnableState;
@@ -131,7 +153,7 @@ typedef struct _tagStMemory
 
 typedef struct _tagStUniformCheckState
 {
-	bool boUniformCheckState[TOTAL_VOLUME_CHANNEL];
+	bool boUniformCheckState[TOTAL_CHANNEL];
 }StUniformCheckState;
 
 
