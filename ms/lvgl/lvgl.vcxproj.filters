@@ -642,6 +642,8 @@
     <ClCompile Include="..\..\GUI_FillRect.c">
       <Filter>2D</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\logo.c" />
+    <ClCompile Include="..\..\screen_protect.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\lvgl\lv_core\lv_group.h">
@@ -1260,6 +1262,8 @@
     <ClInclude Include="..\..\C2D.h">
       <Filter>2D</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\screen_protect.h" />
+    <ClInclude Include="..\..\logo.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\lv_examples\lv_apps\benchmark\benchmark_bg.png">

@@ -11,6 +11,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "screen_protect.h"
+
 /*********************
  *      DEFINES
  *********************/
@@ -58,6 +60,11 @@ bool mouse_read(lv_indev_data_t * data)
     data->point.y = last_y;
     data->state = left_button_down ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
 
+	if (SrceenProtectIsStart())
+	{
+		data->state = LV_INDEV_STATE_REL;
+	}
+
     return false;
 }
 
@@ -68,11 +75,19 @@ void mouse_handler(SDL_Event *event)
 {
     switch (event->type) {
         case SDL_MOUSEBUTTONUP:
-            if (event->button.button == SDL_BUTTON_LEFT)
+			if (event->button.button == SDL_BUTTON_LEFT)
+			{
                 left_button_down = false;
-            break;
+
+				break;
+			}
         case SDL_MOUSEBUTTONDOWN:
-            if (event->button.button == SDL_BUTTON_LEFT) {
+            if (event->button.button == SDL_BUTTON_LEFT) 
+			{
+				if (SrceenProtectIsStart())
+				{
+					SrceenProtectForceStop();
+				}
                 left_button_down = true;
                 last_x = event->motion.x;
                 last_y = event->motion.y;
@@ -83,8 +98,11 @@ void mouse_handler(SDL_Event *event)
             last_y = event->motion.y;
 
             break;
+		default:
+			return;
     }
 
+	SrceenProtectReset();
 }
 
 /**********************

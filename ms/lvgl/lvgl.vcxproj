@@ -125,6 +125,7 @@
     <ClCompile Include="..\..\GUI_DrawPolyline.c" />
     <ClCompile Include="..\..\GUI_FillPolygon.c" />
     <ClCompile Include="..\..\GUI_FillRect.c" />
+    <ClCompile Include="..\..\logo.c" />
     <ClCompile Include="..\..\lvgl\lv_core\lv_group.c" />
     <ClCompile Include="..\..\lvgl\lv_core\lv_indev.c" />
     <ClCompile Include="..\..\lvgl\lv_core\lv_obj.c" />
@@ -265,10 +266,12 @@
     <ClCompile Include="..\..\lv_examples\lv_tutorial\9_responsive\lv_tutorial_responsive.c" />
     <ClCompile Include="..\..\lv_font_chs_24.c" />
     <ClCompile Include="..\..\main.c" />
+    <ClCompile Include="..\..\screen_protect.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\C2D.h" />
     <ClInclude Include="..\..\gui.h" />
+    <ClInclude Include="..\..\logo.h" />
     <ClInclude Include="..\..\lvgl\lvgl.h" />
     <ClInclude Include="..\..\lvgl\lv_conf_templ.h" />
     <ClInclude Include="..\..\lvgl\lv_core\lv_group.h" />
@@ -393,6 +396,7 @@
     <ClInclude Include="..\..\lv_examples\lv_tutorial\8_animations\lv_tutorial_animations.h" />
     <ClInclude Include="..\..\lv_examples\lv_tutorial\9_responsive\lv_tutorial_responsive.h" />
     <ClInclude Include="..\..\lv_ex_conf.h" />
+    <ClInclude Include="..\..\screen_protect.h" />
     <ClInclude Include="..\SDL2-2.0.8\include\SDL2\begin_code.h" />
     <ClInclude Include="..\SDL2-2.0.8\include\SDL2\close_code.h" />
     <ClInclude Include="..\SDL2-2.0.8\include\SDL2\SDL.h" />

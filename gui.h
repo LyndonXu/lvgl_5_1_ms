@@ -259,6 +259,14 @@ typedef struct _tagStKeyboardCtrl
 	uint8_t u8CurConnect;
 }StKeyboardCtrl;
 
+typedef struct _tagStScreenProtedtCtrl
+{
+	lv_obj_t *pTimeCtrl;
+	lv_obj_t *pModeCtrl;
+
+	uint8_t u8CurTimeIndex;
+	uint8_t u8CurModeIndex;
+}StScreenProtectCtrl;
 
 int32_t CreateTableView(void);
 int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel);
@@ -313,6 +321,12 @@ int32_t SetUnionVolumeValue(uint16_t u16Channel, bool boValue);
 int32_t SetLogoColor(lv_color24_t stValue);
 int32_t SetKeyboardPowerValue(bool boIsPowerOn);
 int32_t SetKeyboardConnectMode(uint8_t u8CurConnect);
+
+
+
+int32_t SendScreenProtectTimeCmd(uint8_t u8Index);
+int32_t SendScreenProtectModeCmd(uint8_t u8Index);
+
 
 
 #endif // GUI_H_

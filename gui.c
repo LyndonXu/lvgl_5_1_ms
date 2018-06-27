@@ -8,6 +8,7 @@
 *******************************************************************************/
 
 #include "gui.h"
+#include "screen_protect.h"
 
 #if USE_LVGL
 
@@ -127,6 +128,23 @@ const char *c_pTableName[_Tab_Reserved] =
 //	"保留",
 };
 
+const char *c_pScreenProtectTime[_ScreenProtect_Reserved] =
+{
+	"15 秒",
+	"30 秒",
+	"1 分钟",
+	"2 分钟",
+	"5 分钟",
+	"10 分钟",
+	"关闭",
+};
+
+const char *c_pScreenProtectMode[_ScreenProtect_Mode_Reserved] =
+{
+	"LOGO",
+	"熄屏"
+};
+
 const uint8_t c_u8CtrlModeSpecialLeft[] =
 {
 	0, 2, 3
@@ -165,6 +183,8 @@ static lv_color24_t const s_stLogoColor[_Logo_Color_Reserved] =
 };
 static StLogoColorCtrl s_stLogoColorCtrl = { {NULL,}, 0xFF };
 static StKeyboardCtrl s_stKeyboardCtrl = { NULL, NULL, true, 0 };
+
+static StScreenProtectCtrl s_stScreenProtectCtrl = { 0 };
 
 int32_t ChannelToReal(uint16_t u16Channel)
 {
@@ -398,6 +418,19 @@ __weak int32_t SendKeyboardPowerCmd(bool boIsPowerOn)
 __weak int32_t 	SendKeyboardConnectCmd(uint8_t u8CurConnect)
 {
 	printf("%s, state: %d\n", __FUNCTION__, u8CurConnect);
+	return 0;
+}
+
+__weak int32_t 	SendScreenProtectTimeCmd(uint8_t u8Index)
+{
+	printf("%s, state: %d\n", __FUNCTION__, u8Index);
+	SrceenProtectSetTime(u8Index);
+	return 0;
+}
+__weak int32_t 	SendScreenProtectModeCmd(uint8_t u8Index)
+{
+	printf("%s, state: %d\n", __FUNCTION__, u8Index);
+	SrceenProtectSetMode(u8Index);
 	return 0;
 }
 
@@ -2123,6 +2156,7 @@ int32_t CreateKeyBoardCtrl(lv_obj_t *pParent,
 
 	lv_sw_set_action(pGroup->pPowerCtrl, ActionKeyboardPowerCB);
 	lv_ddlist_set_action(pGroup->pConnectCtrl, ActionKeyboardConnectCB);
+	lv_obj_set_free_num(pGroup->pConnectCtrl, _OBJ_TYPE_DDLIST);
 
 	return 0;
 err:
@@ -2168,6 +2202,170 @@ int32_t RebulidTablePeripheralVaule(void)
 	return 0;
 }
 
+lv_res_t ActionScreenProtectTimeCB(lv_obj_t *pObj)
+{
+	StScreenProtectCtrl *pGroup = lv_obj_get_free_ptr(pObj);
+
+	pGroup->u8CurTimeIndex = (uint8_t)lv_ddlist_get_selected(pObj);
+
+	SendScreenProtectTimeCmd(pGroup->u8CurTimeIndex);
+
+	printf("set the screen protect time %s\n", c_pScreenProtectTime[pGroup->u8CurTimeIndex]);
+
+	return LV_RES_OK;
+}
+
+
+lv_res_t ActionScreenProtectModeCB(lv_obj_t *pObj)
+{
+	StScreenProtectCtrl *pGroup = lv_obj_get_free_ptr(pObj);
+
+	pGroup->u8CurModeIndex = (uint8_t)lv_ddlist_get_selected(pObj);
+
+	SendScreenProtectModeCmd(pGroup->u8CurModeIndex);
+
+	printf("set the screen protect mode %s\n", c_pScreenProtectMode[pGroup->u8CurModeIndex]);
+
+	return LV_RES_OK;
+}
+
+
+int32_t CreateScreenProtectCtrl(lv_obj_t *pParent,
+	lv_group_t *pGlobalGroup,
+	uint16_t u16XPos, uint16_t u16YPos,
+	StScreenProtectCtrl *pGroup)
+{
+	lv_obj_t *pObjTmp;
+
+	if ((pGroup == NULL) || (pParent == NULL))
+	{
+		return -1;
+	}
+
+	{
+		pObjTmp = lv_label_create(pParent, NULL);
+		lv_label_set_text(pObjTmp, CHS_TO_UTF8("屏幕保护"));
+		lv_obj_set_pos(pObjTmp, u16XPos, u16YPos);
+	}
+
+	{
+		lv_obj_t *pLab = NULL;
+		lv_obj_t *pObjTmp = NULL;
+		char c8Str[96];
+		uint32_t i;
+		c8Str[0] = 0;
+		for (i = 0; i < _ScreenProtect_Reserved; i++)
+		{
+			if (i != 0)
+			{
+				strcat(c8Str, "\n");
+			}
+			strcat(c8Str, c_pScreenProtectTime[i]);
+		}
+
+		
+		pObjTmp = lv_ddlist_create(pParent, NULL);
+		if (pObjTmp == NULL)
+		{
+			goto err;
+		}
+		pGroup->pTimeCtrl = pObjTmp;
+
+		lv_obj_set_pos(pObjTmp, u16XPos, u16YPos + 40);
+
+		lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8(c8Str));
+
+		lv_label_set_align(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
+			LV_LABEL_ALIGN_CENTER);
+
+		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
+			LV_LABEL_LONG_BREAK);
+
+		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 120);
+
+		if (pGlobalGroup != NULL)
+		{
+			lv_group_add_obj(pGlobalGroup, pObjTmp);
+		}
+
+	}
+
+	{
+		char c8Str[96];
+		uint32_t i;
+		c8Str[0] = 0;
+		for (i = 0; i < _ScreenProtect_Mode_Reserved; i++)
+		{
+			if (i != 0)
+			{
+				strcat(c8Str, "\n");
+			}
+			strcat(c8Str, c_pScreenProtectMode[i]);
+		}
+
+		pObjTmp = lv_ddlist_create(pParent, NULL);
+		if (pObjTmp == NULL)
+		{
+			goto err;
+		}
+		pGroup->pModeCtrl = pObjTmp;
+
+		lv_obj_set_pos(pObjTmp, u16XPos + 180, u16YPos + 40);
+
+
+		lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8(c8Str));
+
+		lv_label_set_align(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
+			LV_LABEL_ALIGN_CENTER);
+
+		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
+			LV_LABEL_LONG_BREAK);
+
+		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 80);
+
+		if (pGlobalGroup != NULL)
+		{
+			lv_group_add_obj(pGlobalGroup, pObjTmp);
+		}
+	}
+
+	lv_obj_set_free_ptr(pGroup->pTimeCtrl, pGroup);
+	lv_obj_set_free_ptr(pGroup->pModeCtrl, pGroup);
+
+	lv_obj_set_free_num(pGroup->pTimeCtrl, _OBJ_TYPE_DDLIST);
+	lv_obj_set_free_num(pGroup->pModeCtrl, _OBJ_TYPE_DDLIST);
+
+	lv_ddlist_set_action(pGroup->pTimeCtrl, ActionScreenProtectTimeCB);
+	lv_ddlist_set_action(pGroup->pModeCtrl, ActionScreenProtectModeCB);
+
+	return 0;
+err:
+	return -1;
+}
+
+
+int32_t RebuildScreenProtectCtrlValue(StScreenProtectCtrl *pGroup)
+{
+	lv_ddlist_set_selected(pGroup->pTimeCtrl, pGroup->u8CurTimeIndex);
+	lv_ddlist_set_selected(pGroup->pModeCtrl, pGroup->u8CurModeIndex);
+
+	return 0;
+}
+
+int32_t CreateTableSystemSetCtrl(lv_obj_t *pParent, lv_group_t *pGroup)
+{
+	CreateScreenProtectCtrl(pParent, pGroup, 20, 20, &s_stScreenProtectCtrl);
+	return 0;
+}
+
+int32_t RebulidTableSystemSetVaule(void)
+{
+	RebuildScreenProtectCtrlValue(&s_stScreenProtectCtrl);
+	return 0;
+}
+
+
+
 const PFUN_ReleaseTable c_pFUN_ReleaseTable[_Tab_Reserved] = 
 {
 	ReleaseTableInput1To2,
@@ -2188,7 +2386,7 @@ const PFUN_CreateTable c_pFUN_CreateTable[_Tab_Reserved] =
 	CreateTableOtherCtrl,
 	CreateTablePCVolumeCtrl,
 	CreateTablePeripheralCtrl,
-	NULL,
+	CreateTableSystemSetCtrl,
 };
 
 const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
@@ -2200,7 +2398,7 @@ const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
 	RebulidTableOtherVaule,
 	RebulidTablePCVolumeCtrlVaule,
 	RebulidTablePeripheralVaule,
-	NULL,
+	RebulidTableSystemSetVaule,
 };
 
 

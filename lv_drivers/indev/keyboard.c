@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "keyboard.h"
+#include "../../screen_protect.h"
 #if USE_KEYBOARD
 
 #include "lvgl/lv_core/lv_group.h"
@@ -52,10 +53,13 @@ void keyboard_init(void)
  */
 bool keyboard_read(lv_indev_data_t * data)
 {
-	void SetKeyValue(uint32_t u32Key, bool boIsPress);
-
     data->state = state;
     data->key = keycode_to_ascii(last_key);
+
+	if (SrceenProtectIsStart())
+	{
+		data->state = LV_INDEV_STATE_REL;
+	}
     return false;
 }
 
@@ -76,9 +80,35 @@ void keyboard_handler(SDL_Event *event)
 
     }
 #if 1
-	if ((keycode_to_ascii(last_key) == LV_GROUP_KEY_ENTER))
 	{
-		SetKeyValue(LV_GROUP_KEY_ENTER, state == LV_INDEV_STATE_PR);
+		uint32_t u32Key = keycode_to_ascii(event->key.keysym.sym);
+		if (u32Key == SDLK_UNKNOWN)
+		{
+			return;
+		}
+		else if (u32Key == LV_GROUP_KEY_ENTER)
+		{
+			void SetKeyValue(uint32_t u32Key, bool boIsPress);
+
+			SetKeyValue(LV_GROUP_KEY_ENTER, state == LV_INDEV_STATE_PR);
+		}
+		else if (u32Key == SDLK_SPACE)
+		{
+			if (event->type == SDL_KEYUP)
+			{
+				if (SrceenProtectIsStart())
+				{
+					SrceenProtectForceStop();
+				}
+				else
+				{
+					SrceenProtectForceStart();
+				}
+			}
+		}
+
+		SrceenProtectReset();
+
 	}
 #endif
 
