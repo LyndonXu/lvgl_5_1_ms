@@ -4,7 +4,10 @@
 #include "C2D.h"
 #include "lvgl/lvgl.h"
 #include "gui.h"
+#include "logo.h"
 #include "screen_protect.h"
+
+#if USE_LVGL
 
 StScreenProtect s_stScreenProtect = { 0 };
 
@@ -64,7 +67,6 @@ static void SrceenProtectStart(void)
 	}
 	if (s_stScreenProtect.u8ProtectMode == _ScreenProtect_Mode_Logo)
 	{
-		void LOGODraw(void);
 		LOGODraw();
 	}
 	else
@@ -151,3 +153,5 @@ uint8_t SrceenProtectGetMode(void)
 {
 	return s_stScreenProtect.u8ProtectMode;
 }
+
+#endif

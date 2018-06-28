@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include "C2D.h"
 #include "lvgl/lvgl.h"
+#include "gui.h"
+#include "logo.h"
+
+
+#if USE_LVGL
 
 typedef struct _tagStPentagon
 {
@@ -142,5 +147,5 @@ void LOGODraw(void)
 	}
 
 }
-
+#endif
 
