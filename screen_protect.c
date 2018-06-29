@@ -9,6 +9,11 @@
 
 #if USE_LVGL
 
+#ifndef _WIN32
+#include "user_api.h"
+#define printf(x, ...)
+#endif
+
 StScreenProtect s_stScreenProtect = { 0 };
 
 
@@ -58,6 +63,9 @@ void SrceenProtectForceStop(void)
 	s_stScreenProtect.u8ForceProtect = _ScreenProtect_Force_Stop;
 }
 
+__weak void LCDSetBackLight(uint8_t u8Light)
+{
+}
 
 static void SrceenProtectStart(void)
 {
@@ -72,6 +80,7 @@ static void SrceenProtectStart(void)
 	else
 	{
 		/* TODO, close background light power */
+		LCDSetBackLight(0);
 	}
 	s_stScreenProtect.boCurState = true;
 	printf("%s\n", __FUNCTION__);
@@ -83,6 +92,9 @@ static void SrceenProtectStop(void)
 	{
 		return;
 	}
+	
+	LCDSetBackLight(1);
+
 	SrceenProtectReset();
 	s_stScreenProtect.boCurState = false;
 	lv_obj_invalidate(lv_scr_act());
@@ -93,12 +105,23 @@ void SrceenProtectFlush(void)
 {
 	if (s_stScreenProtect.u8ProtectTimeIndex < _ScreenProtect_Close)
 	{
-		uint32_t u32Cur = lv_tick_get();
 		uint32_t u32ProtectTime = c_u32ScreenProtectTime[s_stScreenProtect.u8ProtectTimeIndex];
+		uint32_t u32TimeDiff = 0;
+		
+#ifndef _WIN32
+		__disable_irq();
+#endif
+		{
+			uint32_t u32Cur = lv_tick_get();
+			u32TimeDiff = SysTimeDiff(s_stScreenProtect.u32LastKeyTime, u32Cur);
+		}
+#ifndef _WIN32
+		__enable_irq();
+#endif
 		
 		if (!s_stScreenProtect.boCurState)
 		{
-			if (SysTimeDiff(s_stScreenProtect.u32LastKeyTime, u32Cur) >= u32ProtectTime)
+			if (u32TimeDiff >= u32ProtectTime)
 			{
 				SrceenProtectStart();
 			}

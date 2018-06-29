@@ -559,6 +559,49 @@ int32_t SetKeyboardConnectMode(uint8_t u8CurConnect)
 	return 0;
 }
 
+int32_t GetScreenProtectTimeIndex(uint8_t *pIndex)
+{
+	if (pIndex == NULL)
+	{
+		return -1;
+	}
+	*pIndex = s_stScreenProtectCtrl.u8CurTimeIndex;
+	return 0;
+}
+
+int32_t GetScreenProtectModeIndex(uint8_t *pIndex)
+{
+	if (pIndex == NULL)
+	{
+		return -1;
+	}
+	*pIndex = s_stScreenProtectCtrl.u8CurModeIndex;
+	return 0;
+}
+
+int32_t SetScreenProtectTimeIndex(uint8_t u8Index)
+{
+	if (u8Index >= _ScreenProtect_Reserved)
+	{
+		return -1;
+	}
+	s_stScreenProtectCtrl.u8CurTimeIndex = u8Index;
+	SendScreenProtectTimeCmd(u8Index);
+	return 0;
+}
+
+int32_t SetScreenProtectModeIndex(uint8_t u8Index)
+{
+	if (u8Index >= _ScreenProtect_Mode_Reserved)
+	{
+		return -1;
+	}
+	s_stScreenProtectCtrl.u8CurModeIndex = u8Index;
+	SendScreenProtectModeCmd(u8Index);
+	return 0;
+}
+
+
 
 
 static lv_theme_t *s_pTheme = NULL;
@@ -1989,11 +2032,11 @@ int32_t RebulidTableOtherVaule(void)
 
 int32_t CreateTablePCVolumeCtrl(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
-	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 135, &stVolumePCCtrlPlay, _Channel_PC_Ctrl_Play,
-		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "²¥·Å", c_pCtrlModeSpecial);
-
-	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 470, &stVolumePCCtrlRecord, _Channel_PC_Ctrl_Record,
+	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 135, &stVolumePCCtrlRecord, _Channel_PC_Ctrl_Record,
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "Â¼ÖÆ", c_pCtrlModeSpecial);
+
+	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 470, &stVolumePCCtrlPlay, _Channel_PC_Ctrl_Play,
+		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), "²¥·Å", c_pCtrlModeSpecial);
 
 	return 0;
 }
@@ -2352,7 +2395,6 @@ int32_t CreateScreenProtectCtrl(lv_obj_t *pParent,
 	}
 
 	{
-		lv_obj_t *pLab = NULL;
 		lv_obj_t *pObjTmp = NULL;
 		char c8Str[96];
 		uint32_t i;
