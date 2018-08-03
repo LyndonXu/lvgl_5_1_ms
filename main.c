@@ -75,14 +75,14 @@ int main(int argc, char** argv)
 	//lv_theme_t * th = lv_theme_alien_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_test_theme_1(th);
 	//lv_test_btn_1();
-#ifdef TEST_GUI
+#if ((defined TEST_GUI) && 0)
 	{
 		CreateTableView();
 	}
 #endif
-	if (0)
+	if (1)
 	{
-		lv_theme_t *s_pTheme = lv_theme_alien_init(200, NULL);
+		lv_theme_t *s_pTheme = lv_theme_zen_init(120, NULL);
 
 		if (s_pTheme == NULL)
 		{
@@ -91,10 +91,18 @@ int main(int argc, char** argv)
 
 		lv_theme_set_current(s_pTheme);
 
+		lv_obj_set_style(lv_scr_act(), s_pTheme->bg);
+
+		{
+			lv_obj_t * btn1 = lv_btn_create(lv_scr_act(), NULL);
+			lv_btn_set_state(btn1, LV_BTN_STATE_INA);
+		}
+
 		//lv_test_bar_1();
 		//lv_test_cont_1();
 		//lv_tutorial_animations();
-		lv_test_mbox_1();
+		//lv_test_mbox_1();
+		//lv_test_btn_1();
 	}
 
 	//lv_test_ddlist_1();
