@@ -75,12 +75,12 @@ int main(int argc, char** argv)
 	//lv_theme_t * th = lv_theme_alien_init(210, NULL); /*Hue: 210; Font: NULL (default)*/
 	//lv_test_theme_1(th);
 	//lv_test_btn_1();
-#if ((defined TEST_GUI) && 0)
+#if ((defined TEST_GUI) && 1)
 	{
 		CreateTableView();
 	}
 #endif
-	if (1)
+	if (0)
 	{
 		lv_theme_t *s_pTheme = lv_theme_zen_init(120, NULL);
 

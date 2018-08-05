@@ -1184,8 +1184,8 @@ int32_t CreateVolumeCtrlGroup(
 		{
 			lv_sw_on(pObjTmp);
 			lv_obj_set_click(pObjTmp, false);
-			lv_sw_set_style(pObjTmp, LV_SLIDER_STYLE_BG, &s_stStyleSlideDisable.bg);
-			lv_sw_set_style(pObjTmp, LV_SLIDER_STYLE_INDIC, &s_stStyleSlideDisable.indic);
+			lv_sw_set_style(pObjTmp, (lv_sw_style_t)LV_SLIDER_STYLE_BG, &s_stStyleSlideDisable.bg);
+			lv_sw_set_style(pObjTmp, (lv_sw_style_t)LV_SLIDER_STYLE_INDIC, &s_stStyleSlideDisable.indic);
 			lv_sw_set_style(pObjTmp, LV_SW_STYLE_KNOB_OFF, &s_stStyleSlideDisable.knob);
 			lv_sw_set_style(pObjTmp, LV_SW_STYLE_KNOB_ON, &s_stStyleSlideDisable.knob);
 		}
@@ -2814,14 +2814,14 @@ int32_t SlideDisableStyleInit(void)
 	lv_style_copy(&s_stStyleSlideDisable.indic, (lv_theme_get_current()->slider.indic));
 	lv_style_copy(&s_stStyleSlideDisable.knob, (lv_theme_get_current()->slider.knob));
 	
-	s_stStyleSlideDisable.bg.body.border.color = 
-	s_stStyleSlideDisable.bg.body.main_color = lv_color_hsv_to_rgb(120, 40, 60);
+	s_stStyleSlideDisable.bg.body.border.color = LV_COLOR_HEX3(0xDDD);
+		s_stStyleSlideDisable.bg.body.main_color = LV_COLOR_HEX3(0xCCC);//lv_color_hsv_to_rgb(120, 40, 60);
 	
 	s_stStyleSlideDisable.indic.body.main_color = 
-	s_stStyleSlideDisable.indic.body.grad_color = lv_color_hsv_to_rgb(120, 40, 60);
+	s_stStyleSlideDisable.indic.body.grad_color = LV_COLOR_HEX3(0xCCC); // lv_color_hsv_to_rgb(120, 40, 60);
 
 	s_stStyleSlideDisable.knob.body.main_color =
-	s_stStyleSlideDisable.knob.body.grad_color = lv_color_hsv_to_rgb(120, 40, 60);
+	s_stStyleSlideDisable.knob.body.grad_color = LV_COLOR_HEX3(0xCCC); // lv_color_hsv_to_rgb(120, 40, 60);
 
 	return 0;
 
