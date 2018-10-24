@@ -136,7 +136,8 @@ typedef struct _tagStVolumeCtrlGroup
 
 	const char *pTitle;
 
-	bool boIsFixUniformVoume;
+	bool boIsFixUniformVolume;
+	bool boIsVolumeCtrlEnable;
 
 }StVolumeCtrlGroup;
 
@@ -230,6 +231,8 @@ enum
 	_Logo_Color_Red,
 	_Logo_Color_Green,
 	_Logo_Color_Blue,
+	_Logo_Color_Viola,
+	_Logo_Color_Jacinth,
 	_Logo_Color_White,
 	_Logo_Color_Reserved,
 	//_Logo_Color_Black,
@@ -263,6 +266,13 @@ typedef struct _tagStKeyboardCtrl
 	bool boIsPowerOn;
 	uint8_t u8CurConnect;
 }StKeyboardCtrl;
+
+typedef struct _tagStPCKeyboardCtrl
+{
+	lv_obj_t *pPowerCtrl;
+
+	bool boIsPowerOn;
+}StPCKeyboardCtrl;
 
 typedef struct _tagStScreenProtectCtrl
 {
