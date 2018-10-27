@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 		{
 			lv_task_handler();
 		}
-#if (defined TEST_GUI) && 0
+#if (defined TEST_GUI) && 1
 		{
 			static int cnt = 0;
 			if (cnt == 25)
@@ -155,8 +155,15 @@ int main(int argc, char** argv)
 				if (u8Cnt == 40)
 				{
 					StVolume stVolume = { rand(), rand() };
-					SetAudioVolume(6, stVolume);
-					ReflushActiveTable(0, 6);
+					SetAudioVolume(_Channel_AIN_Mux, stVolume);
+					{	
+						StVolumeCtrlEnable stEnable;
+						stEnable.boIsVolumeCtrlDisable = (rand() & 0x01);
+						stEnable.boIsCtrlModeDisable = (rand() & 0x01);
+						stEnable.boIsUniformVoumeDisable = (rand() & 0x01);
+						SetVolumeVolumeCtrlState(_Channel_AIN_Mux, &stEnable);
+					}
+					ReflushActiveTable(_Fun_AudioVolume, _Channel_AIN_Mux);
 					u8Cnt = 0;
 				}
 

@@ -117,6 +117,13 @@ enum
 #endif
 
 
+typedef struct _tagStVolumeCtrlEnable
+{
+	uint8_t boIsVolumeCtrlDisable : 1;
+	uint8_t boIsCtrlModeDisable : 1;
+	uint8_t boIsUniformVoumeDisable : 1;
+}StVolumeCtrlEnable;
+
 typedef struct _tagStVolumeCtrlGroup
 {
 	lv_obj_t *pLeftVolume;
@@ -136,8 +143,7 @@ typedef struct _tagStVolumeCtrlGroup
 
 	const char *pTitle;
 
-	bool boIsFixUniformVolume;
-	bool boIsVolumeCtrlEnable;
+	StVolumeCtrlEnable stEnableState;
 
 }StVolumeCtrlGroup;
 
@@ -318,6 +324,9 @@ int32_t SetPhantomPowerState(uint16_t u16Channel, bool boIsEnable);
 int32_t SendPhantomPowerStateCmd(uint16_t u16Channel, bool boIsEnable);
 void GetAllPhantomPowerState(bool boState[PHANTOM_POWER_CTRL]);
 void SetAllPhantomPowerState(bool boState[PHANTOM_POWER_CTRL]);
+
+int32_t SetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState);
+int32_t GetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState);
 
 
 uint8_t GetInputEnableState(void);

@@ -121,7 +121,7 @@ StVolumeCtrlGroup stVolumeOutput = { 0 };
 StVolumeCtrlGroup stVolumePCCtrlPlay = { 0 };
 StVolumeCtrlGroup stVolumePCCtrlRecord = { 0 };
 
-const StVolumeCtrlGroup *c_pValumeCtrlArr[TOTAL_VOLUME_CHANNEL + TOTAL_PC_CTRL_MODE_CTRL] =
+const StVolumeCtrlGroup *c_pVolumeCtrlArr[TOTAL_VOLUME_CHANNEL + TOTAL_PC_CTRL_MODE_CTRL] =
 {
 	&stVolumeInput1,
 	&stVolumeInput2,
@@ -138,6 +138,9 @@ const StVolumeCtrlGroup *c_pValumeCtrlArr[TOTAL_VOLUME_CHANNEL + TOTAL_PC_CTRL_M
 	&stVolumePCCtrlPlay,
 	&stVolumePCCtrlRecord,
 };
+
+
+StVolumeCtrlEnable s_stVolumeInputMuxState = { 1, 0, 1};
 
 
 static StMemoryCtrlGroup s_stMemoryCtrlGroup;
@@ -380,6 +383,42 @@ int32_t SetUniformCheckState(uint16_t u16Channel, bool boIsCheck)
 	s_stTotalUnifromCheckState.boUniformCheckState[u16Channel] = boIsCheck;
 	return 0;
 }
+
+
+int32_t SetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState)
+{
+	if (pState == NULL)
+	{
+		return -1;
+	}
+	u16Channel = ChannelToReal(u16Channel);
+
+	if ((u16Channel != _Channel_AIN_Mux))
+	{
+		return -1;
+	}
+
+	s_stVolumeInputMuxState = *pState;
+
+	return 0;
+}
+int32_t GetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState)
+{
+	if (pState == NULL)
+	{
+		return -1;
+	}
+	u16Channel = ChannelToReal(u16Channel);
+
+	if ((u16Channel != _Channel_AIN_Mux))
+	{
+		return -1;
+	}
+
+	*pState = s_stVolumeInputMuxState;
+
+	return 0;
+};
 
 int32_t GetPhantomPowerState(uint16_t u16Channel, bool *pState)
 {
@@ -730,7 +769,7 @@ lv_res_t ActionSliderCB(struct _lv_obj_t * obj)
 
 	printf("slider value is: %d\n", u16NewValue);
 	StVolumeCtrlGroup *pGroup = lv_obj_get_free_ptr(obj);
-	if (pGroup->boIsFixUniformVolume ||
+	if (pGroup->stEnableState.boIsVolumeCtrlDisable ||
 		((pGroup->pUniformVolume != NULL) && lv_sw_get_state(pGroup->pUniformVolume)))
 	{
 		if ((obj == pGroup->pLeftVolume) && (pGroup->pRightVolume != NULL))
@@ -1079,7 +1118,7 @@ int32_t CreateVolumeCtrlGroupMono(
 
 
 	{
-		pGroup->boIsFixUniformVolume = true;
+		pGroup->stEnableState.boIsUniformVoumeDisable = true;
 	}
 
 	{
@@ -1138,6 +1177,80 @@ err:
 
 }
 
+void EnableSlider(lv_obj_t *pObj, bool boIsEnable)
+{
+	if (pObj != NULL)
+	{
+		if (boIsEnable)
+		{
+			lv_theme_t *th = lv_theme_get_current();
+			lv_obj_set_click(pObj, true);
+			if (th != NULL) 
+			{
+				lv_slider_set_style(pObj, LV_SLIDER_STYLE_BG, th->slider.bg);
+				lv_slider_set_style(pObj, LV_SLIDER_STYLE_INDIC, th->slider.indic);
+				lv_slider_set_style(pObj, LV_SLIDER_STYLE_KNOB, th->slider.knob);
+			}
+		}
+		else
+		{
+			lv_obj_set_click(pObj, false);
+			lv_slider_set_style(pObj, LV_SLIDER_STYLE_BG, &s_stStyleSlideDisable.bg);
+			lv_slider_set_style(pObj, LV_SLIDER_STYLE_INDIC, &s_stStyleSlideDisable.indic);
+			lv_slider_set_style(pObj, LV_SLIDER_STYLE_KNOB, &s_stStyleSlideDisable.knob);
+		}
+	}
+}
+
+void EnableSwitch(lv_obj_t *pObj, bool boIsEnable)
+{
+	if (pObj != NULL)
+	{
+		if (boIsEnable)
+		{
+			lv_theme_t *th = lv_theme_get_current();
+			lv_obj_set_click(pObj, true);
+			if (th != NULL)
+			{
+				lv_sw_set_style(pObj, (lv_sw_style_t)LV_SLIDER_STYLE_BG, th->slider.bg);
+				lv_sw_set_style(pObj, (lv_sw_style_t)LV_SLIDER_STYLE_INDIC, th->slider.indic);
+				lv_sw_set_style(pObj, LV_SW_STYLE_KNOB_OFF, th->slider.knob);
+				lv_sw_set_style(pObj, LV_SW_STYLE_KNOB_ON, th->slider.knob);
+			}
+		}
+		else
+		{
+			lv_obj_set_click(pObj, false);
+			lv_sw_set_style(pObj, (lv_sw_style_t)LV_SLIDER_STYLE_BG, &s_stStyleSlideDisable.bg);
+			lv_sw_set_style(pObj, (lv_sw_style_t)LV_SLIDER_STYLE_INDIC, &s_stStyleSlideDisable.indic);
+			lv_sw_set_style(pObj, LV_SW_STYLE_KNOB_OFF, &s_stStyleSlideDisable.knob);
+			lv_sw_set_style(pObj, LV_SW_STYLE_KNOB_ON, &s_stStyleSlideDisable.knob);
+		}
+	}
+}
+
+int32_t ChangeVolumeCtrlGroupState(StVolumeCtrlGroup *pGroup, StVolumeCtrlEnable *pState)
+{
+	if (pGroup == NULL || pState == NULL)
+	{
+		return -1;
+	}
+
+	if (pGroup->stEnableState.boIsVolumeCtrlDisable != pState->boIsVolumeCtrlDisable)
+	{
+		EnableSlider(pGroup->pLeftVolume, !pState->boIsVolumeCtrlDisable);
+		EnableSlider(pGroup->pRightVolume, !pState->boIsVolumeCtrlDisable);
+
+		pGroup->stEnableState.boIsVolumeCtrlDisable = pState->boIsVolumeCtrlDisable;
+	}
+
+	if (pGroup->stEnableState.boIsUniformVoumeDisable != pState->boIsUniformVoumeDisable)
+	{
+		EnableSwitch(pGroup->pUniformVolume, !pState->boIsUniformVoumeDisable);
+		pGroup->stEnableState.boIsUniformVoumeDisable = pState->boIsUniformVoumeDisable;
+	}
+	return 0;
+}
 
 int32_t CreateVolumeCtrlGroup(
 		lv_obj_t *pParent,
@@ -1246,16 +1359,12 @@ int32_t CreateVolumeCtrlGroup(
 
 		if (!boIsVolumeCtrlEnable)
 		{
-			lv_obj_set_click(pObjTmp, false);
-			lv_slider_set_style(pObjTmp, (lv_sw_style_t)LV_SLIDER_STYLE_BG, &s_stStyleSlideDisable.bg);
-			lv_slider_set_style(pObjTmp, (lv_sw_style_t)LV_SLIDER_STYLE_INDIC, &s_stStyleSlideDisable.indic);
-			lv_slider_set_style(pObjTmp, LV_SW_STYLE_KNOB_OFF, &s_stStyleSlideDisable.knob);
-			lv_slider_set_style(pObjTmp, LV_SW_STYLE_KNOB_ON, &s_stStyleSlideDisable.knob);
+			EnableSlider(pObjTmp, boIsVolumeCtrlEnable);
 		}
 
 		pGroup->pLeftVolume = pObjTmp;
 
-		pGroup->boIsVolumeCtrlEnable = boIsVolumeCtrlEnable;
+		pGroup->stEnableState.boIsVolumeCtrlDisable = !boIsVolumeCtrlEnable;
 
 	}
 
@@ -1293,11 +1402,7 @@ int32_t CreateVolumeCtrlGroup(
 		if (boIsFixUniformVolume)
 		{
 			lv_sw_on(pObjTmp);
-			lv_obj_set_click(pObjTmp, false);
-			lv_sw_set_style(pObjTmp, (lv_sw_style_t)LV_SLIDER_STYLE_BG, &s_stStyleSlideDisable.bg);
-			lv_sw_set_style(pObjTmp, (lv_sw_style_t)LV_SLIDER_STYLE_INDIC, &s_stStyleSlideDisable.indic);
-			lv_sw_set_style(pObjTmp, LV_SW_STYLE_KNOB_OFF, &s_stStyleSlideDisable.knob);
-			lv_sw_set_style(pObjTmp, LV_SW_STYLE_KNOB_ON, &s_stStyleSlideDisable.knob);
+			EnableSwitch(pObjTmp, !boIsFixUniformVolume);
 		}
 
 #else
@@ -1319,7 +1424,7 @@ int32_t CreateVolumeCtrlGroup(
 			lv_obj_set_click(pObjTmp, false);
 		}
 #endif
-		pGroup->boIsFixUniformVolume = boIsFixUniformVolume;
+		pGroup->stEnableState.boIsUniformVoumeDisable = boIsFixUniformVolume;
 	}
 
 	{
@@ -1916,6 +2021,7 @@ int32_t RebulidOutputEnableCtrlVaule(StOutputEnableCtrlGroup *pGroup)
 typedef int32_t (*PFUN_CreateTable)(lv_obj_t *pTabPage, lv_group_t *pGroup);
 typedef int32_t (*PFUN_ReleaseTable)(lv_obj_t *pTabPage);
 typedef int32_t(*PFUN_RebulidTableValue)(void);
+typedef int32_t(*PFUN_RebulidTableState)(void);
 
 int32_t ReleaseTableInput1To2(lv_obj_t *pTabParent)
 {
@@ -1946,7 +2052,7 @@ int32_t RebulidVolumeCtrlValue(uint16_t u16Index)
 		return -1;
 	}
 
-	pGroup = c_pValumeCtrlArr[u16Index];
+	pGroup = c_pVolumeCtrlArr[u16Index];
 
 	if ((pGroup->pLeftVolume != NULL) &&
 		(lv_slider_get_value(pGroup->pLeftVolume) != s_stTotalCtrlMemroy.stVolume[u16Index].u8Channel1))
@@ -1973,7 +2079,7 @@ int32_t RebulidVolumeCtrlValue(uint16_t u16Index)
 			lv_ddlist_set_selected(pGroup->pCtrlMode, u16Selected);
 		}
 	}
-	if ((!pGroup->boIsFixUniformVolume) && (pGroup->pUniformVolume != NULL))
+	if ((!pGroup->stEnableState.boIsUniformVoumeDisable) && (pGroup->pUniformVolume != NULL))
 	{
 #if 1
 		if (lv_sw_get_state(pGroup->pUniformVolume) != s_stTotalUnifromCheckState.boUniformCheckState[u16Index])
@@ -2065,7 +2171,9 @@ int32_t ReleaseTableI2SCtrl(lv_obj_t *pTabParent)
 int32_t CreateTableI2SCtrl(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
 	CreateVolumeCtrlGroup(pTabParent, pGroup, 135, &stVolumeInputMux, _Channel_AIN_Mux,
-		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "MIX", true, false);
+		c_u8CtrlMode4, sizeof(c_u8CtrlMode4), "MIX", 
+		s_stVolumeInputMuxState.boIsUniformVoumeDisable, 
+		!s_stVolumeInputMuxState.boIsVolumeCtrlDisable);
 
 	CreateVolumeCtrlGroup(pTabParent, pGroup, 470, &stVolumeInputPC, _Channel_PC,
 		c_u8CtrlMode7, sizeof(c_u8CtrlMode7), "PC", false, true);
@@ -2845,6 +2953,27 @@ const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
 	RebulidTableSystemSetVaule,
 };
 
+int32_t RebulidTableI2SCtrlState(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	return ChangeVolumeCtrlGroupState(&stVolumeInputMux, &s_stVolumeInputMuxState);
+}
+
+const PFUN_RebulidTableState c_pFun_RebulidTableState[_Tab_Reserved] =
+{
+	NULL,
+	NULL,
+	RebulidTableI2SCtrlState, /* */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
 
 int32_t ReleaseTable(lv_obj_t *pTabPage, uint16_t u16TableIndex)
 {
@@ -3046,6 +3175,10 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 		c_pFun_RebulidTableValue[u16ActiveTableIndex]();
 	}
 
+	if (c_pFun_RebulidTableState[u16ActiveTableIndex] != NULL)
+	{
+		c_pFun_RebulidTableState[u16ActiveTableIndex]();
+	}
 	return 0;
 }
 
