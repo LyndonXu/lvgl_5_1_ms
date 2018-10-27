@@ -385,7 +385,7 @@ int32_t SetUniformCheckState(uint16_t u16Channel, bool boIsCheck)
 }
 
 
-int32_t SetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState)
+int32_t SetVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState)
 {
 	if (pState == NULL)
 	{
@@ -402,7 +402,7 @@ int32_t SetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState
 
 	return 0;
 }
-int32_t GetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState)
+int32_t GetVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState)
 {
 	if (pState == NULL)
 	{
@@ -419,6 +419,43 @@ int32_t GetVolumeVolumeCtrlState(uint16_t u16Channel, StVolumeCtrlEnable *pState
 
 	return 0;
 };
+
+int32_t SetAllVolumeUniformState(uint16_t u16Status)
+{
+	uint32_t i;
+	for (i = 0; i < TOTAL_CHANNEL; i++)
+	{
+		if (((u16Status >> i) & 0x01) == 0)
+		{
+			s_stTotalUnifromCheckState.boUniformCheckState[i] = false;
+		}
+		else
+		{
+			s_stTotalUnifromCheckState.boUniformCheckState[i] = true;
+		}
+	}
+	return 0;
+}
+
+int32_t GetAllVolumeUniformState(uint16_t *pStatus)
+{
+	uint32_t i;
+	uint16_t u16Status = 0;
+	if (pStatus == NULL)
+	{
+		return -1;
+	}
+	for (i = 0; i < TOTAL_CHANNEL; i++)
+	{
+		if (s_stTotalUnifromCheckState.boUniformCheckState[i])
+		{
+			u16Status |= (1 << i);
+		}
+	}
+	*pStatus = u16Status;
+
+	return 0;
+}
 
 int32_t GetPhantomPowerState(uint16_t u16Channel, bool *pState)
 {
@@ -3089,6 +3126,31 @@ static void GroupStyleMod(lv_style_t * style)
 }
 
 
+int32_t ReflushCurrentActiveTable(uint16_t u16ActiveTableIndex)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+	if (u16ActiveTableIndex >= _Tab_Reserved)
+	{
+		u16ActiveTableIndex = lv_tabview_get_tab_act(s_pTableView);
+	}
+	if (u16ActiveTableIndex >= _Tab_Reserved)
+	{
+		return -1;
+	}
+	if (c_pFun_RebulidTableValue[u16ActiveTableIndex] != NULL)
+	{
+		c_pFun_RebulidTableValue[u16ActiveTableIndex]();
+	}
+
+	if (c_pFun_RebulidTableState[u16ActiveTableIndex] != NULL)
+	{
+		c_pFun_RebulidTableState[u16ActiveTableIndex]();
+	}
+	return 0;
+}
 
 int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 {
@@ -3169,17 +3231,7 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 			break;
 	}
 
-
-	if (c_pFun_RebulidTableValue[u16ActiveTableIndex] != NULL)
-	{
-		c_pFun_RebulidTableValue[u16ActiveTableIndex]();
-	}
-
-	if (c_pFun_RebulidTableState[u16ActiveTableIndex] != NULL)
-	{
-		c_pFun_RebulidTableState[u16ActiveTableIndex]();
-	}
-	return 0;
+	return ReflushCurrentActiveTable(u16ActiveTableIndex);
 }
 
 void GroupFocusCB(lv_group_t * pGroup)

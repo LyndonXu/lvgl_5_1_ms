@@ -161,7 +161,7 @@ int main(int argc, char** argv)
 						stEnable.boIsVolumeCtrlDisable = (rand() & 0x01);
 						stEnable.boIsCtrlModeDisable = (rand() & 0x01);
 						stEnable.boIsUniformVoumeDisable = (rand() & 0x01);
-						SetVolumeVolumeCtrlState(_Channel_AIN_Mux, &stEnable);
+						SetVolumeCtrlState(_Channel_AIN_Mux, &stEnable);
 					}
 					ReflushActiveTable(_Fun_AudioVolume, _Channel_AIN_Mux);
 					u8Cnt = 0;
