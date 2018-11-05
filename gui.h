@@ -154,6 +154,21 @@ typedef struct _tagStVolume
 	uint8_t u8Channel2;
 }StVolume;
 
+typedef struct _tagStPCAudioDeviceSelectCtrlGroup
+{
+	lv_obj_t *pCtrl;
+	lv_obj_t *pLabel;
+	uint8_t u8Select;
+
+	uint8_t u8Index;
+	char *pStr;
+}StPCAudioDeviceSelectCtrlGroup;
+
+typedef struct _tagStPCAudioDeviceSelectCtrlState
+{
+	uint8_t u8Select[TOTAL_PC_CTRL_VOLUME_CHANNEL];
+}StPCAudioDeviceSelectCtrlState;
+
 typedef struct _tagStMemory
 {
 	StVolume stVolume[TOTAL_CHANNEL];
@@ -167,7 +182,6 @@ typedef struct _tagStUniformCheckState
 {
 	bool boUniformCheckState[TOTAL_CHANNEL];
 }StUniformCheckState;
-
 
 
 typedef struct _tagStMemoryCtrlGroup
