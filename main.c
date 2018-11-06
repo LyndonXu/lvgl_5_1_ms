@@ -154,18 +154,33 @@ int main(int argc, char** argv)
 
 				if (u8Cnt == 40)
 				{
-					StVolume stVolume = { rand(), rand() };
-					SetAudioVolume(_Channel_AIN_Mux, stVolume);
-					{	
-						StVolumeCtrlEnable stEnable;
-						stEnable.boIsVolumeCtrlDisable = (rand() & 0x01);
-						stEnable.boIsCtrlModeDisable = (rand() & 0x01);
-						stEnable.boIsUniformVoumeDisable = (rand() & 0x01);
-						SetVolumeCtrlState(_Channel_AIN_Mux, &stEnable);
+					{
+						StVolume stVolume = { rand(), rand() };
+						SetAudioVolume(_Channel_AIN_Mux, stVolume);
+						{
+							StVolumeCtrlEnable stEnable;
+							stEnable.boIsVolumeCtrlDisable = (rand() & 0x01);
+							stEnable.boIsCtrlModeDisable = (rand() & 0x01);
+							stEnable.boIsUniformVoumeDisable = (rand() & 0x01);
+							SetVolumeCtrlState(_Channel_AIN_Mux, &stEnable);
+						}
+						ReflushActiveTable(_Fun_AudioVolume, _Channel_AIN_Mux);
+						u8Cnt = 0;
 					}
-					ReflushActiveTable(_Fun_AudioVolume, _Channel_AIN_Mux);
-					u8Cnt = 0;
+					{
+						const char *pList[2] = 
+						{
+							"List1_1\nList1_2\nList1_3",
+							"List2_1\nList2_2\nList2_3"
+						};
+
+						SetAudioDeviceList(_Channel_PC_Ctrl_Play/* + (rand() & 0x01)*/,
+							pList[(rand() & 0x01)], -1);
+						SetAudioDeviceListIndex(_Channel_PC_Ctrl_Play + (rand() & 0x01),
+							(rand() % 0x03));
+					}
 				}
+
 
 			}
 			if (cnt == 12)

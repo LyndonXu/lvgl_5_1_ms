@@ -354,6 +354,12 @@ int32_t SetOutputEnableState(uint8_t u8Index, uint8_t u8NewState);
 int32_t SendOutputEnableStateCmd(uint8_t u8Index, uint8_t u8NewState);
 
 
+int32_t SetAudioDeviceList(uint8_t u8Channel, const char *pAudioDeviceList, int32_t s32Length);
+int32_t SetAudioDeviceListIndex(uint8_t u8Channel, uint8_t u8Index);
+int32_t GetAudioDeviceListIndex(uint8_t u8Channel, uint8_t *pIndex);
+int32_t SendPCAudioDeviceSelectCmd(uint16_t u16Channel, uint8_t u8Select);
+
+
 int32_t SendMemeoryCtrlCmd(uint16_t u16Channel, bool boIsSave);
 int32_t SendFactoryCtrlCmd(void);
 

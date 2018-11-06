@@ -145,8 +145,8 @@ StVolumeCtrlEnable s_stVolumeInputMuxState = { 1, 0, 1};
 #define MAX_AUDIO_DEVICE_LEN	128
 static StPCAudioDeviceSelectCtrlGroup s_stPCPhoneSelectCtrlGroup;
 static StPCAudioDeviceSelectCtrlGroup s_stPCSpeakerSelectCtrlGroup;
-static char s_c8PhoneSelectStr[MAX_AUDIO_DEVICE_LEN] = { "1231231231\nabcdefghijklmnopqrstuvwxyz\n0123456789" };
-static char s_c8SpeakerSelectStr[MAX_AUDIO_DEVICE_LEN] = { "9876543210\nabcdefghijklmnopqrstuvwxyz\n0123456789" };
+static char s_c8PhoneSelectStr[MAX_AUDIO_DEVICE_LEN] = { "NULL" };
+static char s_c8SpeakerSelectStr[MAX_AUDIO_DEVICE_LEN] = { "NULL" };
 
 static StMemoryCtrlGroup s_stMemoryCtrlGroup;
 static StPhantomPowerCtrlGroup s_stPhantomPowerCtrlGroup;
@@ -794,6 +794,80 @@ int32_t SetMIDIChannelIndex(uint8_t u8Index)
 	return 0;
 }
 
+int32_t SetAudioDeviceList(uint8_t u8Channel,  const char *pAudioDeviceList, int32_t s32Length)
+{
+	if (pAudioDeviceList == NULL)
+	{
+		return -1;
+	}
+	if (s32Length < 0)
+	{
+		s32Length = strlen(pAudioDeviceList) + 1;
+	}
+	if (s32Length > (MAX_AUDIO_DEVICE_LEN - 1))
+	{
+		s32Length = MAX_AUDIO_DEVICE_LEN - 1;
+	}
+	if (u8Channel == _Channel_PC_Ctrl_Play)
+	{
+		//memset(s_c8SpeakerSelectStr, 0, MAX_AUDIO_DEVICE_LEN);
+		memcpy(s_c8SpeakerSelectStr, pAudioDeviceList, s32Length);
+		s_c8SpeakerSelectStr[s32Length] = 0;
+
+		ReflushActiveTable(_Fun_AudioVolume, _Channel_PC_Ctrl_Play);
+
+		return 0;
+	}
+	else if (u8Channel == _Channel_PC_Ctrl_Record)
+	{
+		memcpy(s_c8PhoneSelectStr, pAudioDeviceList, s32Length);
+		s_c8PhoneSelectStr[s32Length] = 0;
+
+		ReflushActiveTable(_Fun_AudioVolume, _Channel_PC_Ctrl_Record);
+		return 0;
+	}
+	
+	return -1;
+}
+
+int32_t SetAudioDeviceListIndex(uint8_t u8Channel, uint8_t u8Index)
+{
+	if (u8Channel == _Channel_PC_Ctrl_Play)
+	{
+		s_stPCAudioDeviceSelectCtrlState.u8Select[0] = u8Index;
+		ReflushActiveTable(_Fun_AudioVolume, _Channel_PC_Ctrl_Play);
+		return 0;
+	}
+	else if (u8Channel == _Channel_PC_Ctrl_Record)
+	{
+		s_stPCAudioDeviceSelectCtrlState.u8Select[1] = u8Index;
+
+		ReflushActiveTable(_Fun_AudioVolume, _Channel_PC_Ctrl_Record);
+		return 0;
+	}
+	return -1;
+}
+
+int32_t GetAudioDeviceListIndex(uint8_t u8Channel, uint8_t *pIndex)
+{
+	if (pIndex == NULL)
+	{
+		return -1;
+	}
+	if (u8Channel == _Channel_PC_Ctrl_Play)
+	{
+		*pIndex = s_stPCAudioDeviceSelectCtrlState.u8Select[0];
+
+		return 0;
+	}
+	else if (u8Channel == _Channel_PC_Ctrl_Record)
+	{
+		*pIndex = s_stPCAudioDeviceSelectCtrlState.u8Select[1];
+		
+		return 0;
+	}
+	return -1;
+}
 
 
 static lv_theme_t *s_pTheme = NULL;
@@ -2245,6 +2319,18 @@ int32_t RebulidTableI2SCtrlValue(void)
 	return 0;
 }
 
+
+int32_t RebulidTableI2SCtrlState(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	return ChangeVolumeCtrlGroupState(&stVolumeInputMux, &s_stVolumeInputMuxState);
+}
+
+
 int32_t ReleaseTableOutputCtrl(lv_obj_t *pTabParent)
 {
 	ReleaseVolumeCtrlGroup(&stVolumeOutputHeaderPhone);
@@ -2317,10 +2403,67 @@ static lv_res_t ActionPCAudioDeviceSelectCB(lv_obj_t *obj)
 	uint8_t u8Index = pGroup->u8Index - _Channel_PC_Ctrl_Play;
 	pGroup->u8Select = (uint8_t)lv_ddlist_get_selected(obj);
 
-	s_stPCAudioDeviceSelectCtrlState.u8Select[u8Index] = pGroup->u8Select;
-	SendPCAudioDeviceSelectCmd(pGroup->u8Index, pGroup->u8Select);
-
+	if (s_stPCAudioDeviceSelectCtrlState.u8Select[u8Index] != pGroup->u8Select)
+	{
+		s_stPCAudioDeviceSelectCtrlState.u8Select[u8Index] = pGroup->u8Select;
+		SendPCAudioDeviceSelectCmd(pGroup->u8Index, pGroup->u8Select);
+	}
 	return LV_RES_OK;
+}
+
+int32_t PCAudioDeviceSetList(StPCAudioDeviceSelectCtrlGroup *pCtrl , char *pDeviceList)
+{
+	//MAX_AUDIO_DEVICE_LEN
+	int32_t i = 0, j = 0, k = 0;
+	bool boJump = false;
+	while ((pDeviceList[i] != 0) &&
+		(i < (MAX_AUDIO_DEVICE_LEN - 1)))
+	{
+		if (boJump)
+		{
+			if (pDeviceList[i] != '\n')
+			{
+				i++;
+				continue;
+			}
+			else
+			{
+				i++;
+				boJump = false;
+				continue;
+			}
+		}
+
+		boJump = false;
+		pDeviceList[j] = pDeviceList[i];
+		k++;
+		if (pDeviceList[j] == '\n')
+		{
+			k = 0;
+		}
+		else if (k >= 20 + 1)
+		{
+			pDeviceList[j] = '\n';
+			pDeviceList[j - 1] =
+				pDeviceList[j - 2] =
+				pDeviceList[j - 3] = '.';
+
+			k = 0;
+			boJump = true;
+		}
+
+		j++;
+		i++;
+	}
+	pDeviceList[j] = 0;
+	if (pDeviceList[j - 1] == '\n')
+	{
+		pDeviceList[j - 1] = 0;
+	}
+
+	lv_ddlist_set_options(pCtrl->pCtrl, CHS_TO_UTF8(pDeviceList));
+	
+	return 0;
 }
 
 int32_t CreatePCAudioDeviceSelectCtrl(
@@ -2357,53 +2500,7 @@ int32_t CreatePCAudioDeviceSelectCtrl(
 	{
 		pObjTmp = lv_ddlist_create(pParent, NULL);
 
-		{
-			//MAX_AUDIO_DEVICE_LEN
-			int32_t i = 0, j = 0, k = 0;
-			bool boJump = false;
-			while ((pDeviceList[i] != 0) && 
-				(i < (MAX_AUDIO_DEVICE_LEN - 1)))
-			{
-				if (boJump)
-				{
-					if (pDeviceList[i] != '\n')
-					{
-						i++;
-						continue;
-					}
-					else
-					{
-						i++;
-						boJump = false;
-						continue;
-					}
-				}
-
-				boJump = false;
-				pDeviceList[j] = pDeviceList[i];
-				k++;
-				if (pDeviceList[j] == '\n')
-				{
-					k = 0;
-				}
-				else if (k >= 20 + 1)
-				{
-					pDeviceList[j] = '\n';
-					pDeviceList[j - 1] =
-						pDeviceList[j - 2] =
-						pDeviceList[j - 3] = '.';
-
-					k = 0;
-					boJump = true;
-				}
-
-				j++;
-				i++;
-			}
-			pDeviceList[j] = 0;
-		}
-
-		lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8(pDeviceList));
+		//lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8(pDeviceList));
 
 
 		//lv_label_set_align(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
@@ -2418,6 +2515,9 @@ int32_t CreatePCAudioDeviceSelectCtrl(
 		lv_obj_set_top(pObjTmp, true);
 
 		pGroup->pCtrl = pObjTmp;
+
+		PCAudioDeviceSetList(pGroup, pDeviceList);
+
 	}
 
 	if (pGlobalGroup != NULL)
@@ -2493,6 +2593,20 @@ int32_t ReleaseTablePCVolumeCtrl(lv_obj_t *pTabParent)
 	ReleaseVolumeCtrlGroup(&stVolumePCCtrlRecord);
 	return 0;
 }
+
+int32_t RebulidTablePCVolumeCtrlState(void)
+{
+	if (s_pTableView == NULL)
+	{
+		return -1;
+	}
+
+	PCAudioDeviceSetList(&s_stPCSpeakerSelectCtrlGroup, s_c8SpeakerSelectStr);
+	PCAudioDeviceSetList(&s_stPCPhoneSelectCtrlGroup, s_c8PhoneSelectStr);
+
+	return 0;
+}
+
 
 
 
@@ -3158,16 +3272,6 @@ const PFUN_RebulidTableValue c_pFun_RebulidTableValue[_Tab_Reserved] =
 	RebulidTableSystemSetValue,
 };
 
-int32_t RebulidTableI2SCtrlState(void)
-{
-	if (s_pTableView == NULL)
-	{
-		return -1;
-	}
-
-	return ChangeVolumeCtrlGroupState(&stVolumeInputMux, &s_stVolumeInputMuxState);
-}
-
 const PFUN_RebulidTableState c_pFun_RebulidTableState[_Tab_Reserved] =
 {
 	NULL,
@@ -3175,7 +3279,7 @@ const PFUN_RebulidTableState c_pFun_RebulidTableState[_Tab_Reserved] =
 	RebulidTableI2SCtrlState, /* */
 	NULL,
 	NULL,
-	NULL,
+	RebulidTablePCVolumeCtrlState,
 	NULL,
 	NULL,
 };
@@ -3308,14 +3412,14 @@ int32_t ReflushCurrentActiveTable(uint16_t u16ActiveTableIndex)
 	{
 		return -1;
 	}
-	if (c_pFun_RebulidTableValue[u16ActiveTableIndex] != NULL)
-	{
-		c_pFun_RebulidTableValue[u16ActiveTableIndex]();
-	}
-
 	if (c_pFun_RebulidTableState[u16ActiveTableIndex] != NULL)
 	{
 		c_pFun_RebulidTableState[u16ActiveTableIndex]();
+	}
+
+	if (c_pFun_RebulidTableValue[u16ActiveTableIndex] != NULL)
+	{
+		c_pFun_RebulidTableValue[u16ActiveTableIndex]();
 	}
 	return 0;
 }
