@@ -310,6 +310,22 @@ typedef struct _tagStMIDIChannelCtrl
 	uint8_t u8CurMIDIChannelIndex;
 }StMIDIChannelCtrl;
 
+#ifndef EMLANGUAGEID
+#define EMLANGUAGEID
+typedef enum _tagEmLanguageID
+{
+	_Language_Begin = 0,
+
+	_Language_CHS = _Language_Begin,
+	_Language_English,
+
+	_Language_Reserved,
+}EmLanguageID;
+
+#endif
+
+extern EmLanguageID g_emLanguageID;
+
 int32_t CreateTableView(void);
 int32_t ReflushCurrentActiveTable(uint16_t u16ActiveTableIndex);
 int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel);
