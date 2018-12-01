@@ -216,8 +216,8 @@ const char *c_pTableName[_Language_Reserved][_Tab_Reserved] =
 		"I2S",
 		"Out",
 		"Other",
-		"A & C",
-		"Per.",
+		"AUD",	/* Sound Card */
+		"PE",	/*Peripheral Equipment*/
 		"Config",
 		//	"音量采集",
 		//	"保留",
@@ -255,7 +255,7 @@ const char *c_pScreenProtectMode[_Language_Reserved][_ScreenProtect_Mode_Reserve
 	},
 	{
 		"LOGO",
-		"OFF Sc."
+		"OFF SCRN"
 	},
 };
 
@@ -303,6 +303,7 @@ static StPCKeyboardCtrl s_stPCKeyboardCtrl = { NULL, true,};
 
 static StScreenProtectCtrl s_stScreenProtectCtrl = { 0 };
 static StMIDIChannelCtrl s_stMIDIChannelCtrl = { 0 };
+static StLanguageCtrl s_stLanguageCtrl = { 0 };
 
 int32_t ChannelToReal(uint16_t u16Channel)
 {
@@ -697,6 +698,11 @@ __weak int32_t 	SendMIDIChannelCmd(uint8_t u8Index)
 	return 0;
 }
 
+__weak int32_t 	SendLanguageCmd(uint8_t u8Index)
+{
+	printf("%s, state: %d\n", __FUNCTION__, u8Index);
+	return 0;
+}
 int32_t GetUnionVolumeValue(uint16_t u16Channel, bool *pValue)
 {
 	
@@ -3119,7 +3125,7 @@ int32_t CreateScreenProtectCtrl(lv_obj_t *pParent,
 		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
 			LV_LABEL_LONG_BREAK);
 
-		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 120);
+		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 100);
 
 		if (pGlobalGroup != NULL)
 		{
@@ -3148,7 +3154,7 @@ int32_t CreateScreenProtectCtrl(lv_obj_t *pParent,
 		}
 		pGroup->pModeCtrl = pObjTmp;
 
-		lv_obj_set_pos(pObjTmp, u16XPos + 180, u16YPos + 40);
+		lv_obj_set_pos(pObjTmp, u16XPos + 150, u16YPos + 40);
 
 
 		lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8(c8Str));
@@ -3159,7 +3165,7 @@ int32_t CreateScreenProtectCtrl(lv_obj_t *pParent,
 		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
 			LV_LABEL_LONG_BREAK);
 
-		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 80);
+		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 110);
 
 		if (pGlobalGroup != NULL)
 		{
@@ -3195,6 +3201,22 @@ lv_res_t ActionMIDIChannelCB(lv_obj_t *pObj)
 	return LV_RES_OK;
 }
 
+lv_res_t ActionLanguageCB(lv_obj_t *pObj)
+{
+	StLanguageCtrl *pGroup = lv_obj_get_free_ptr(pObj);
+
+	pGroup->u8LanguageIndex = (uint8_t)lv_ddlist_get_selected(pObj);
+
+	SendLanguageCmd(pGroup->u8LanguageIndex);
+
+	g_emLanguageID = (EmLanguageID)(pGroup->u8LanguageIndex % _Language_Reserved);
+
+	printf("set language index %d\n", pGroup->u8LanguageIndex);
+
+	//ReflushCurrentActiveTable(~0);
+
+	return LV_RES_OK;
+}
 int32_t CreateMIDIChannelCtrl(lv_obj_t *pParent,
 	lv_group_t *pGlobalGroup,
 	uint16_t u16XPos, uint16_t u16YPos,
@@ -3266,6 +3288,73 @@ int32_t CreateMIDIChannelCtrl(lv_obj_t *pParent,
 err:
 	return -1;
 }
+
+int32_t CreateLanguageCtrl(lv_obj_t *pParent,
+	lv_group_t *pGlobalGroup,
+	uint16_t u16XPos, uint16_t u16YPos,
+	StLanguageCtrl *pGroup)
+{
+	lv_obj_t *pObjTmp;
+
+	if ((pGroup == NULL) || (pParent == NULL))
+	{
+		return -1;
+	}
+
+	{
+		pObjTmp = lv_label_create(pParent, NULL);
+		lv_label_set_text(pObjTmp, CHS_TO_UTF8(g_emLanguageID == _Language_English ? 
+			"Language" : "语言"));
+		lv_obj_set_pos(pObjTmp, u16XPos, u16YPos + 10);
+	}
+
+	{
+		lv_obj_t *pObjTmp = NULL;
+
+		pObjTmp = lv_ddlist_create(pParent, NULL);
+		if (pObjTmp == NULL)
+		{
+			goto err;
+		}
+		pGroup->pLanguageCtrl = pObjTmp;
+
+		lv_obj_set_pos(pObjTmp, u16XPos + 140, u16YPos);
+
+		//lv_ddlist_set_fix_height(pObjTmp, 200);
+
+		lv_ddlist_set_options(pObjTmp, CHS_TO_UTF8("中文\nEnglish"));
+
+		//lv_ddlist_set_anim_time(pObjTmp, 0);
+
+		lv_label_set_align(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
+			LV_LABEL_ALIGN_CENTER);
+
+		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
+			LV_LABEL_LONG_BREAK);
+
+		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 120);
+
+		if (pGlobalGroup != NULL)
+		{
+			lv_group_add_obj(pGlobalGroup, pObjTmp);
+		}
+
+	}
+
+
+	lv_obj_set_free_ptr(pGroup->pLanguageCtrl, pGroup);
+
+	lv_obj_set_free_num(pGroup->pLanguageCtrl, _OBJ_TYPE_DDLIST);
+
+	lv_ddlist_set_action(pGroup->pLanguageCtrl, ActionLanguageCB);
+	lv_ddlist_set_selected(pGroup->pLanguageCtrl, g_emLanguageID);
+	pGroup->u8LanguageIndex = g_emLanguageID;
+
+	return 0;
+err:
+	return -1;
+}
+
 int32_t RebuildScreenProtectCtrlValue(StScreenProtectCtrl *pGroup)
 {
 	lv_ddlist_set_selected(pGroup->pTimeCtrl, pGroup->u8CurTimeIndex);
@@ -3280,8 +3369,16 @@ int32_t RebuildMIDIChannelCtrlValue(StMIDIChannelCtrl *pGroup)
 	return 0;
 }
 
+int32_t RebuildLanguageCtrlValue(StLanguageCtrl *pGroup)
+{
+	lv_ddlist_set_selected(pGroup->pLanguageCtrl, pGroup->u8LanguageIndex);
+	return 0;
+}
+
+
 int32_t CreateTableSystemSetCtrl(lv_obj_t *pParent, lv_group_t *pGroup)
 {
+	CreateLanguageCtrl(pParent, pGroup, 20, 200, &s_stLanguageCtrl);
 	CreateMIDIChannelCtrl(pParent, pGroup, 20, 130, &s_stMIDIChannelCtrl);
 	CreateScreenProtectCtrl(pParent, pGroup, 20, 20, &s_stScreenProtectCtrl);
 	return 0;
@@ -3291,6 +3388,7 @@ int32_t RebulidTableSystemSetValue(void)
 {
 	RebuildScreenProtectCtrlValue(&s_stScreenProtectCtrl);
 	RebuildMIDIChannelCtrlValue(&s_stMIDIChannelCtrl);
+	RebuildLanguageCtrlValue(&s_stLanguageCtrl);
 	return 0;
 }
 
@@ -3454,6 +3552,26 @@ static void GroupStyleMod(lv_style_t * style)
 
 #endif
 
+}
+static EmLanguageID s_emLanguageID = _Language_English;
+
+int32_t ReflushLanguageInit()
+{
+	s_emLanguageID = g_emLanguageID;
+	return 0;
+}
+
+int32_t ReflushLanguage()
+{
+	if (s_emLanguageID != g_emLanguageID)
+	{
+		DestroyTableView();
+		CreateTableView(_Tab_SYS_Ctrl);
+
+		s_emLanguageID = g_emLanguageID;
+	}
+
+	return 0;
 }
 
 
@@ -3630,9 +3748,36 @@ int32_t SlideDisableStyleInit(void)
 	return 0;
 
 }
+int32_t DestroyTableView(void)
+{
+	if (s_pTableView != NULL)
+	{
+		if (s_pGroup != NULL)
+		{
+			{
+				/* I don't kown the reason */
+				uint16_t u16ActiveTableIndex = lv_tabview_get_tab_act(s_pTableView);
 
+				lv_obj_t *pTable = lv_tabview_get_tab(s_pTableView, u16ActiveTableIndex);
+				lv_obj_t *pCont = (lv_obj_t *)lv_obj_get_free_ptr(pTable);
+				if (pCont != NULL)
+				{
+					ReleaseTable(pTable, u16ActiveTableIndex);
 
-int32_t CreateTableView(void)
+					lv_obj_del(pCont);
+				}
+				lv_obj_set_free_ptr(pTable, NULL);
+			}
+
+			lv_group_remove_obj(s_pTableView);
+		}
+		lv_obj_del(s_pTableView);
+
+		s_pTableView = NULL;
+	}
+	return 0;
+}
+int32_t CreateTableInit(void)
 {
 	lv_theme_t * lv_theme_zen_init(uint16_t hue, lv_font_t *font);
 
@@ -3650,16 +3795,14 @@ int32_t CreateTableView(void)
 	SlideDisableStyleInit();
 	//lv_font_add(&lv_font_chs_20, LV_FONT_DEFAULT);
 
-/*
-    lv_obj_t *scr = lv_cont_create(NULL, NULL);
-    lv_scr_load(scr);
-    lv_cont_set_style(scr, s_pTheme->bg);
-*/
+	/*
+	lv_obj_t *scr = lv_cont_create(NULL, NULL);
+	lv_scr_load(scr);
+	lv_cont_set_style(scr, s_pTheme->bg);
+	*/
 
-    lv_obj_set_style(lv_scr_act(), s_pTheme->bg);
+	lv_obj_set_style(lv_scr_act(), s_pTheme->bg);
 
-	lv_obj_t *pTableView = lv_tabview_create(lv_scr_act(), NULL);
-	lv_tabview_set_sliding(pTableView, false);
 
 
 #if 0
@@ -3676,7 +3819,7 @@ int32_t CreateTableView(void)
 #endif
 
 
-	
+
 	{
 		bool keyboard_read(lv_indev_data_t * data);
 
@@ -3689,16 +3832,26 @@ int32_t CreateTableView(void)
 		lv_indev_t *kb_indev = lv_indev_drv_register(&kb_drv);
 		lv_indev_set_group(kb_indev, s_pGroup);
 #endif
-		if (s_pGroup != NULL)
-		{
-			lv_group_add_obj(s_pGroup, pTableView);
-
-			lv_group_set_focus_cb(s_pGroup, GroupFocusCB);
-		}
-
-		lv_obj_set_free_ptr(pTableView, s_pGroup);
-
 	}
+
+	return 0;
+}
+
+int32_t CreateTableView(uint16_t u16InitTableIndex)
+{
+
+	lv_obj_t *pTableView = lv_tabview_create(lv_scr_act(), NULL);
+	lv_tabview_set_sliding(pTableView, false);
+
+	if (s_pGroup != NULL)
+	{
+		lv_group_add_obj(s_pGroup, pTableView);
+
+		lv_group_set_focus_cb(s_pGroup, GroupFocusCB);
+	}
+
+	lv_obj_set_free_ptr(pTableView, s_pGroup);
+
 
 	lv_obj_t *pTab[_Tab_Reserved] = { NULL };
 
@@ -3717,7 +3870,13 @@ int32_t CreateTableView(void)
 
 
 	s_pTableView = pTableView;
-	CreateTable(pTab[_Tab_PC_Volume_Ctrl], _Tab_PC_Volume_Ctrl);
+
+	if (u16InitTableIndex >= _Tab_Reserved)
+	{
+		u16InitTableIndex = _Tab_PC_Volume_Ctrl;
+	}
+
+	CreateTable(pTab[u16InitTableIndex], u16InitTableIndex);
 
 #if 0
 	{
@@ -3739,7 +3898,8 @@ int32_t CreateTableView(void)
 	}
 #endif
 
-	lv_tabview_set_tab_act(pTableView, _Tab_PC_Volume_Ctrl, false);
+
+	lv_tabview_set_tab_act(pTableView, u16InitTableIndex, false);
 
 	lv_tabview_set_tab_load_action(pTableView, ActionTabview);
 

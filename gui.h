@@ -310,6 +310,14 @@ typedef struct _tagStMIDIChannelCtrl
 	uint8_t u8CurMIDIChannelIndex;
 }StMIDIChannelCtrl;
 
+typedef struct _tagStLanguageCtrl
+{
+	lv_obj_t *pLanguageCtrl;
+
+	uint8_t u8LanguageIndex;
+}StLanguageCtrl;
+
+
 #ifndef EMLANGUAGEID
 #define EMLANGUAGEID
 typedef enum _tagEmLanguageID
@@ -326,7 +334,9 @@ typedef enum _tagEmLanguageID
 
 extern EmLanguageID g_emLanguageID;
 
-int32_t CreateTableView(void);
+int32_t CreateTableInit(void);
+int32_t CreateTableView(uint16_t u16InitTableIndex);
+int32_t DestroyTableView(void);
 int32_t ReflushCurrentActiveTable(uint16_t u16ActiveTableIndex);
 int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel);
 void SetKeySpeek(uint16_t u16Speed);

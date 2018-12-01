@@ -755,6 +755,11 @@ static void lv_ddlist_refr_size(lv_obj_t * ddlist, bool anim_en)
         new_height = font_h + 2 * label_style->text.line_space;
     }
 
+	if (ext->anim_time == 0)
+	{
+		anim_en = 0;
+	}
+
     if(anim_en == 0) {
 		if (ext->move_up == 1)
 		{

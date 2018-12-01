@@ -77,7 +77,9 @@ int main(int argc, char** argv)
 	//lv_test_btn_1();
 #if ((defined TEST_GUI) && 1)
 	{
-		CreateTableView();
+		ReflushLanguageInit();
+		CreateTableInit();
+		CreateTableView(~0);
 	}
 #endif
 	if (0)
@@ -117,6 +119,7 @@ int main(int argc, char** argv)
 		{
 			lv_task_handler();
 		}
+		ReflushLanguage();
 #if (defined TEST_GUI) && 1
 		{
 			static int cnt = 0;
