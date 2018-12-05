@@ -12,6 +12,12 @@
 
 #if USE_LVGL
 
+extern const char *c_pVersion;
+
+#ifdef _WIN32
+const char *c_pVersion = "Version Info20181205"; 
+#endif
+
 #ifndef _WIN32
 #define printf(x, ...)
 #endif
@@ -3608,6 +3614,29 @@ err:
 	return -1;
 }
 
+int32_t CreateVersionInfo(lv_obj_t *pParent)
+{
+	lv_obj_t *pTmp = lv_label_create(pParent, NULL);
+	if (pTmp != NULL)
+	{
+		lv_coord_t w = lv_obj_get_width(pParent);
+		lv_coord_t h = lv_obj_get_height(pParent);
+		lv_theme_t *pTheme = lv_theme_get_current();
+		uint8_t u8FontH = 24;
+		if (pTheme != NULL)
+		{
+			u8FontH = lv_font_get_height(pTheme->bg->text.font);
+		}
+
+		lv_label_set_text(pTmp, c_pVersion);
+		lv_obj_align(pTmp, pParent, LV_ALIGN_IN_BOTTOM_RIGHT, 0 - u8FontH, 0 - u8FontH);
+	}
+
+	return 0;
+
+}
+
+
 int32_t RebuildScreenProtectCtrlValue(StScreenProtectCtrl *pGroup)
 {
 	lv_ddlist_set_selected(pGroup->pTimeCtrl, pGroup->u8CurTimeIndex);
@@ -3631,9 +3660,11 @@ int32_t RebuildLanguageCtrlValue(StLanguageCtrl *pGroup)
 
 int32_t CreateTableSystemSetCtrl(lv_obj_t *pParent, lv_group_t *pGroup)
 {
-	CreateLanguageCtrl(pParent, pGroup, 20, 200, &s_stLanguageCtrl);
-	CreateMIDIChannelCtrl(pParent, pGroup, 20, 130, &s_stMIDIChannelCtrl);
 	CreateScreenProtectCtrl(pParent, pGroup, 20, 20, &s_stScreenProtectCtrl);
+	CreateMIDIChannelCtrl(pParent, pGroup, 20, 130, &s_stMIDIChannelCtrl);
+	CreateLanguageCtrl(pParent, pGroup, 20, 200, &s_stLanguageCtrl);
+	CreateVersionInfo(pParent);
+
 	return 0;
 }
 
