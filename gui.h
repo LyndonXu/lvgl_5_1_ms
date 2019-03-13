@@ -254,6 +254,7 @@ enum
 	_Logo_Color_Viola,
 	_Logo_Color_Jacinth,
 	_Logo_Color_White,
+	_Logo_Color_DackCopperRed,
 	_Logo_Color_Reserved,
 	//_Logo_Color_Black,
 };

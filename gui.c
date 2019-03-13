@@ -537,7 +537,8 @@ static lv_color24_t const s_stLogoColor[_Logo_Color_Reserved] =
 	{ 0xFF, 0 , 0, },
 	{ 0xEE, 0x82, 0xEE},
 	{ 0x00, 0x45, 0xFF },
-	{ 0xFF, 0xFF , 0xFF, },
+	{ 0xFF, 0xFF, 0xFF, },
+	{ 0x74, 0xB1, 0xCE, },//ceb174
 	//{ 0x00, 0x00 , 0x00, },
 };
 static StLogoColorCtrl s_stLogoColorCtrl = { {NULL,}, 0xFF };
@@ -3303,8 +3304,8 @@ int32_t RebulidPCKeyBoardCtrlValue(StPCKeyboardCtrl *pGroup)
 int32_t CreateTablePeripheralCtrl(lv_obj_t *pParent, lv_group_t *pGroup)
 {
 	CreateLogoColorCtrl(pParent, pGroup, 20, 20, &s_stLogoColorCtrl);
-	CreateKeyBoardCtrl(pParent, pGroup, 20, 180, &s_stKeyboardCtrl);
-	CreatePCKeyBoardCtrl(pParent, pGroup, 20, 300, &s_stPCKeyboardCtrl);
+	CreateKeyBoardCtrl(pParent, pGroup, 20, 260, &s_stKeyboardCtrl);
+	CreatePCKeyBoardCtrl(pParent, pGroup, 420, 20, &s_stPCKeyboardCtrl);
 	return 0;
 }
 
