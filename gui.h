@@ -241,6 +241,7 @@ enum
 	_Fun_PhantomPower,
 	_Fun_InputEnable,
 	_Fun_OutputEnable,
+	_Fun_Peripheral,
 
 	_Fun_Reserved,
 };
@@ -403,11 +404,13 @@ int32_t GetUnionVolumeValue(uint16_t u16Channel, bool *pValue);
 int32_t GetLogoColor(lv_color24_t *pValue);
 int32_t GetKeyboardPowerValue(bool *pIsPowerOn);
 int32_t GetKeyboardConnectMode(uint8_t *pCurConnect);
+int32_t GetPCKeyboardPowerValue(bool *pIsPowerOn);
 
 int32_t SetUnionVolumeValue(uint16_t u16Channel, bool boValue);
 int32_t SetLogoColor(lv_color24_t stValue);
 int32_t SetKeyboardPowerValue(bool boIsPowerOn);
 int32_t SetKeyboardConnectMode(uint8_t u8CurConnect);
+int32_t SetPCKeyboardPowerValue(bool boIsPowerOn);
 
 
 int32_t GetScreenProtectTimeIndex(uint8_t *pIndex);

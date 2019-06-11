@@ -995,6 +995,17 @@ int32_t GetKeyboardConnectMode(uint8_t *pCurConnect)
 }
 
 
+int32_t GetPCKeyboardPowerValue(bool *pIsPowerOn)
+{
+	if (pIsPowerOn != NULL)
+	{
+		*pIsPowerOn = s_stPCKeyboardCtrl.boIsPowerOn;
+		return 0;
+	}
+	return -1;
+}
+
+
 int32_t SetUnionVolumeValue(uint16_t u16Channel, bool boValue)
 {
 	if (u16Channel <= _Channel_NormalOut && 
@@ -1036,6 +1047,14 @@ int32_t SetKeyboardConnectMode(uint8_t u8CurConnect)
 	SendKeyboardConnectCmd(u8CurConnect);
 	return 0;
 }
+
+int32_t SetPCKeyboardPowerValue(bool boIsPowerOn)
+{
+	s_stPCKeyboardCtrl.boIsPowerOn = boIsPowerOn;
+	SendPCKeyboardPowerCmd(boIsPowerOn);
+	return 0;
+}
+
 
 int32_t GetScreenProtectTimeIndex(uint8_t *pIndex)
 {
