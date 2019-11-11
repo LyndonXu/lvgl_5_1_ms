@@ -789,6 +789,7 @@ int32_t GetPhantomPowerState(uint16_t u16Channel, bool *pState)
 	return 0;
 }
 
+
 int32_t SetPhantomPowerState(uint16_t u16Channel, bool boIsEnable)
 {
 	if ((u16Channel >= PHANTOM_POWER_CTRL))
@@ -796,6 +797,20 @@ int32_t SetPhantomPowerState(uint16_t u16Channel, bool boIsEnable)
 		return -1;
 	}
 	s_stTotalCtrlMemroy.boPhantomPower[u16Channel] = boIsEnable;
+	return 0;
+}
+
+int32_t GetMemoryArrIndex(uint8_t *pIndex)
+{
+	*pIndex = s_stTotalCtrlMemroy.u8MemoryArrIndex;
+
+	return 0;
+}
+
+int32_t SetMemoryArrIndex(uint8_t u8Index)
+{
+	s_stTotalCtrlMemroy.u8MemoryArrIndex = u8Index;
+
 	return 0;
 }
 
@@ -1984,11 +1999,13 @@ lv_res_t ActionMemoryMBoxCB(lv_obj_t *btn, const char *txt)
 	if (strstr(txt, s_c8StrLoad) != NULL)
 	{
 		printf("%s %d\n", "Load", pGroup->u8TmpMemorySelect);
+		s_stTotalCtrlMemroy.u8MemoryArrIndex = pGroup->u8TmpMemorySelect;
 		SendMemeoryCtrlCmd(pGroup->u8TmpMemorySelect, false);
 	}
 	else
 	{
 		printf("%s %d\n", "Save", pGroup->u8TmpMemorySelect);
+		s_stTotalCtrlMemroy.u8MemoryArrIndex = pGroup->u8TmpMemorySelect;
 		SendMemeoryCtrlCmd(pGroup->u8TmpMemorySelect, true);
 	}
 	if (pGroup->pMBox != NULL)
@@ -2158,6 +2175,25 @@ int32_t CreateMemoryCtrl(
 
 	return 0;
 }
+
+int32_t RebuildMemoryCtrlValue(StMemoryCtrlGroup *pGroup)
+{
+	uint8_t u8Index = 0;
+	if (pGroup == NULL)
+	{
+		return -1;
+	}
+	if (GetMemoryArrIndex(&u8Index) == 0)
+	{
+		if (pGroup->pMemoryCtrl != NULL)
+		{
+			lv_ddlist_set_selected(pGroup->pMemoryCtrl, u8Index);
+		}
+	}
+
+	return 0;
+}
+
 
 lv_res_t ActionPhantomPowerCB(lv_obj_t *pObj)
 {
@@ -2744,7 +2780,7 @@ int32_t RebulidTableOtherValue(void)
 	{
 		return -1;
 	}
-
+	RebuildMemoryCtrlValue(&s_stMemoryCtrlGroup);
 	RebulidPhantomPowerCtrlValue(&s_stPhantomPowerCtrlGroup);
 	RebulidInputEnableCtrlValue(&s_stInputEnableCtrlGroup);
 	RebulidOutputEnableCtrlValue(&s_stOutputEnableCtrlGroup);
@@ -2795,7 +2831,7 @@ int32_t PCAudioDeviceSetList(StPCAudioDeviceSelectCtrlGroup *pCtrl , char *pDevi
 		{
 			k = 0;
 		}
-		else if (k >= 20 + 1)
+		else if (k >= 14 + 1)
 		{
 			pDeviceList[j] = '\n';
 			pDeviceList[j - 1] =
@@ -2863,7 +2899,7 @@ int32_t CreatePCAudioDeviceSelectCtrl(
 		lv_label_set_long_mode(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label,
 			LV_LABEL_LONG_BREAK);
 
-		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 280);
+		lv_obj_set_width(((lv_ddlist_ext_t *)lv_obj_get_ext_attr(pObjTmp))->label, 200);
 
 		lv_obj_align(pObjTmp, pGroup->pLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 20);
 		lv_obj_set_top(pObjTmp, true);
@@ -2913,16 +2949,16 @@ int32_t RebulidPCAudioDeviceSelectCtrlValue(uint16_t u16Index)
 }
 int32_t CreateTablePCVolumeCtrl(lv_obj_t *pTabParent, lv_group_t *pGroup)
 {
-	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 50, &stVolumePCCtrlRecord, _Channel_PC_Ctrl_Record,
+	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 25, &stVolumePCCtrlRecord, _Channel_PC_Ctrl_Record,
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), pStrRecord[SAFE_LANGUAGEID], c_pCtrlModeSpecial[SAFE_LANGUAGEID]);
 
-	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 220, &stVolumePCCtrlPlay, _Channel_PC_Ctrl_Play,
+	CreateVolumeCtrlGroupMono(pTabParent, pGroup, 25 + 270, &stVolumePCCtrlPlay, _Channel_PC_Ctrl_Play,
 		c_u8CtrlMode2, sizeof(c_u8CtrlMode2), pStrPlay[SAFE_LANGUAGEID], c_pCtrlModeSpecial[SAFE_LANGUAGEID]);
 
-	CreatePCAudioDeviceSelectCtrl(pTabParent, pGroup, 440, 7, pStrRecord[SAFE_LANGUAGEID],
+	CreatePCAudioDeviceSelectCtrl(pTabParent, pGroup, 520, 7, pStrRecord[SAFE_LANGUAGEID],
 		s_c8PhoneSelectStr, _Channel_PC_Ctrl_Record, &s_stPCPhoneSelectCtrlGroup);
 
-	CreatePCAudioDeviceSelectCtrl(pTabParent, pGroup, 440, 7 + 120, pStrPlay[SAFE_LANGUAGEID],
+	CreatePCAudioDeviceSelectCtrl(pTabParent, pGroup, 520, 7 + 120, pStrPlay[SAFE_LANGUAGEID],
 		s_c8SpeakerSelectStr, _Channel_PC_Ctrl_Play, &s_stPCSpeakerSelectCtrlGroup);
 	return 0;
 }
@@ -2950,13 +2986,26 @@ int32_t ReleaseTablePCVolumeCtrl(lv_obj_t *pTabParent)
 
 int32_t RebulidTablePCVolumeCtrlState(void)
 {
+	static char s_c8PhoneSelectStrBack[MAX_AUDIO_DEVICE_LEN] = { 0 };
+	static char s_c8SpeakerSelectStrBack[MAX_AUDIO_DEVICE_LEN] = { 0 };
+
 	if (s_pTableView == NULL)
 	{
 		return -1;
 	}
+		
+	if (strcmp(s_c8SpeakerSelectStrBack, s_c8SpeakerSelectStr) != 0)
+	{
+		PCAudioDeviceSetList(&s_stPCSpeakerSelectCtrlGroup, s_c8SpeakerSelectStr);
+		strcpy(s_c8SpeakerSelectStrBack, s_c8SpeakerSelectStr);
+	}
+	
+	if (strcmp(s_c8PhoneSelectStrBack, s_c8PhoneSelectStr) != 0)
+	{
+		PCAudioDeviceSetList(&s_stPCPhoneSelectCtrlGroup, s_c8PhoneSelectStr);
+		strcpy(s_c8PhoneSelectStrBack, s_c8PhoneSelectStr);
+	}
 
-	PCAudioDeviceSetList(&s_stPCSpeakerSelectCtrlGroup, s_c8SpeakerSelectStr);
-	PCAudioDeviceSetList(&s_stPCPhoneSelectCtrlGroup, s_c8PhoneSelectStr);
 
 	return 0;
 }
@@ -3991,6 +4040,15 @@ int32_t ReflushActiveTable(uint32_t u32Fun, uint32_t u32Channel)
 				return 0;
 			}
 			break;
+		}
+		case _Fun_Peripheral:
+		{
+			if (u16ActiveTableIndex != _Tab_Peripheral_Ctrl)
+			{
+				return 0;
+			}
+			break;
+		
 		}
 		default:
 			break;

@@ -176,6 +176,7 @@ typedef struct _tagStMemory
 	bool boPhantomPower[PHANTOM_POWER_CTRL];
 	uint8_t u8AINChannelEnableState;
 	uint8_t u8OutputChannelEnableState;
+	uint8_t u8MemoryArrIndex;
 }StMemory;
 
 typedef struct _tagStUniformCheckState
@@ -391,6 +392,8 @@ int32_t GetAudioDeviceListIndex(uint8_t u8Channel, uint8_t *pIndex);
 int32_t SendPCAudioDeviceSelectCmd(uint16_t u16Channel, uint8_t u8Select);
 
 
+int32_t GetMemoryArrIndex(uint8_t *pIndex);
+int32_t SetMemoryArrIndex(uint8_t u8Index);
 int32_t SendMemeoryCtrlCmd(uint16_t u16Channel, bool boIsSave);
 int32_t SendFactoryCtrlCmd(void);
 
