@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 			lv_task_handler();
 		}
 		ReflushLanguage();
-#if (defined TEST_GUI) && 1
+#if (defined TEST_GUI) && 0
 		{
 			static int cnt = 0;
 			if (cnt == 25)

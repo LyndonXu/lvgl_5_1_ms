@@ -50,6 +50,13 @@ static struct {
 }s_stStyleSlideDisable;
 
 
+static struct {
+	lv_style_t bg;
+	lv_style_t sb;
+	lv_style_t sel;
+}s_stStyleDDListDisable;
+
+
 const char *c_pCtrlMode[_Language_Reserved][_Audio_Ctrl_Mode_Reserved] =
 {
 	{
@@ -1721,6 +1728,44 @@ void EnableSwitch(lv_obj_t *pObj, bool boIsEnable)
 	}
 }
 
+void EnableDDList(lv_obj_t *pObj, bool boIsEnable)
+{
+	if (pObj != NULL)
+	{
+		if (boIsEnable)
+		{
+			lv_theme_t *th = lv_theme_get_current();
+			if (th != NULL)
+			{
+				lv_ddlist_set_style(pObj, LV_DDLIST_STYLE_BG, th->ddlist.bg);
+				lv_ddlist_set_style(pObj, LV_DDLIST_STYLE_SB, th->ddlist.sb);
+				lv_ddlist_set_style(pObj, LV_DDLIST_STYLE_SEL, th->ddlist.sel);
+			}
+		}
+		else
+		{
+			lv_ddlist_set_style(pObj, LV_DDLIST_STYLE_BG, &s_stStyleDDListDisable.bg);
+			lv_ddlist_set_style(pObj, LV_DDLIST_STYLE_SB, &s_stStyleDDListDisable.sb);
+			lv_ddlist_set_style(pObj, LV_DDLIST_STYLE_SEL,&s_stStyleDDListDisable.sel);
+		}
+		lv_obj_set_click(pObj, boIsEnable);
+		{
+			lv_obj_t *pChild = NULL;
+			do
+			{
+				pChild = lv_obj_get_child(pObj, pChild);
+				if (pChild != NULL)
+				{
+					lv_obj_set_click(pChild, boIsEnable);
+				}
+			} while (pChild != NULL);
+		}
+
+
+	}
+}
+
+
 int32_t ChangeVolumeCtrlGroupState(StVolumeCtrlGroup *pGroup, StVolumeCtrlEnable *pState)
 {
 	if (pGroup == NULL || pState == NULL)
@@ -2273,6 +2318,7 @@ int32_t CreatePhantomPowerCtrl(
 			lv_cb_set_action(pObjTmp, ActionPhantomPowerCB);
 #endif
 		}
+		EnableSwitch(pGroup->pCBArr[0], false);
 	}
 
 	return 0;
@@ -3246,6 +3292,9 @@ int32_t CreateKeyBoardCtrl(lv_obj_t *pParent,
 		{
 			lv_group_add_obj(pGlobalGroup, pObjTmp);
 		}
+
+		EnableDDList(pObjTmp, false);
+		lv_obj_set_hidden(pObjTmp, true);
 	}
 
 	lv_obj_set_free_ptr(pGroup->pConnectCtrl, pGroup);
@@ -4129,6 +4178,27 @@ int32_t SlideDisableStyleInit(void)
 	return 0;
 
 }
+
+int32_t DDlistDisableStyleInit(void)
+{
+
+	lv_style_copy(&s_stStyleDDListDisable.bg, (lv_theme_get_current()->ddlist.bg));
+	lv_style_copy(&s_stStyleDDListDisable.sb, (lv_theme_get_current()->ddlist.sb));
+	lv_style_copy(&s_stStyleDDListDisable.sel, (lv_theme_get_current()->ddlist.sel));
+
+	s_stStyleDDListDisable.bg.body.border.color = LV_COLOR_HEX3(0xDDD);
+	s_stStyleDDListDisable.bg.body.main_color = LV_COLOR_HEX3(0xCCC);//lv_color_hsv_to_rgb(120, 40, 60);
+
+	s_stStyleDDListDisable.sb.body.main_color =
+		s_stStyleDDListDisable.sb.body.grad_color = LV_COLOR_HEX3(0xCCC); // lv_color_hsv_to_rgb(120, 40, 60);
+
+	s_stStyleDDListDisable.sel.body.main_color =
+		s_stStyleDDListDisable.sel.body.grad_color = LV_COLOR_HEX3(0xCCC); // lv_color_hsv_to_rgb(120, 40, 60);
+
+	return 0;
+}
+
+
 int32_t DestroyTableView(void)
 {
 	if (s_pTableView != NULL)
@@ -4177,6 +4247,9 @@ int32_t CreateTableInit(void)
 	lv_theme_set_current(s_pTheme);
 
 	SlideDisableStyleInit();
+
+	DDlistDisableStyleInit();
+
 	//lv_font_add(&lv_font_chs_20, LV_FONT_DEFAULT);
 
 	/*
